@@ -1,0 +1,21 @@
+{
+  "name": "Web3Fps.GameFoundation.Tests",
+  "rootNamespace": "Web3Fps.GameFoundation.Tests",
+  "references": [
+    "Web3Fps.GameFoundation"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

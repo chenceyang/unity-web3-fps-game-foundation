@@ -1,0 +1,14 @@
+{
+  "name": "Web3Fps.GameFoundation",
+  "rootNamespace": "Web3Fps.GameFoundation",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

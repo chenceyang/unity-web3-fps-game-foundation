@@ -1,0 +1,174 @@
+openapi: 3.1.0
+info:
+  title: Web3 FPS Game Backend Extension
+  version: 1.0.0
+  description: Unity 游戏侧新增的赛事、交易状态和对局结果契约。资产/钱包/奖励契约沿用 web3-fps-assets/api/openapi.yaml。
+servers:
+  - url: https://api.example.com
+security:
+  - gameSession: []
+paths:
+  /v1/tournaments:
+    get:
+      operationId: getTournaments
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TournamentList"}
+  /v1/tournaments/{tournamentId}:
+    get:
+      operationId: getTournament
+      parameters: [{$ref: "#/components/parameters/TournamentId"}]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TournamentSummary"}
+  /v1/tournaments/{tournamentId}/register-intent:
+    post:
+      operationId: beginTournamentRegistration
+      parameters: [{$ref: "#/components/parameters/TournamentId"}]
+      responses:
+        "200": {$ref: "#/components/responses/TransactionIntent"}
+  /v1/tournaments/{tournamentId}/sponsor-intent:
+    post:
+      operationId: beginTournamentSponsorship
+      parameters: [{$ref: "#/components/parameters/TournamentId"}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amountWei]
+              properties: {amountWei: {type: string, pattern: "^[0-9]+$"}}
+      responses:
+        "200": {$ref: "#/components/responses/TransactionIntent"}
+  /v1/tournaments/{tournamentId}/claim-prize-intent:
+    post:
+      operationId: beginPrizeClaim
+      parameters: [{$ref: "#/components/parameters/TournamentId"}]
+      responses:
+        "200": {$ref: "#/components/responses/TransactionIntent"}
+  /v1/tournaments/{tournamentId}/claim-refund-intent:
+    post:
+      operationId: beginRefundClaim
+      parameters: [{$ref: "#/components/parameters/TournamentId"}]
+      responses:
+        "200": {$ref: "#/components/responses/TransactionIntent"}
+  /v1/transactions/{intentId}:
+    get:
+      operationId: pollTransaction
+      parameters:
+        - in: path
+          name: intentId
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TransactionStatus"}
+  /internal/v1/matches:
+    post:
+      operationId: publishMatchResult
+      security: [{serviceToken: []}]
+      description: 专用游戏服务器发布完整 canonicalJson；后端保存原文并异步提交 MatchAttestation。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [matchId, matchIdKey, resultHash, canonicalJson]
+              properties:
+                matchId: {type: string}
+                matchIdKey: {type: string, pattern: "^0x[0-9a-f]{64}$"}
+                resultHash: {type: string, pattern: "^0x[0-9a-f]{64}$"}
+                canonicalJson: {type: string}
+      responses:
+        "202": {description: Stored and queued for attestation}
+        "409": {description: matchId already exists; payload must not be overwritten}
+  /v1/matches/{matchId}:
+    get:
+      operationId: getMatchResult
+      parameters:
+        - in: path
+          name: matchId
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          description: Published canonical result and attestation state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [matchId, resultHash, canonicalJson, attestationState]
+                properties:
+                  matchId: {type: string}
+                  resultHash: {type: string}
+                  canonicalJson: {type: string}
+                  attestationState: {type: string, enum: [pending, attested, failed]}
+                  txHash: {type: string}
+components:
+  securitySchemes:
+    gameSession: {type: http, scheme: bearer}
+    serviceToken: {type: http, scheme: bearer}
+  parameters:
+    TournamentId:
+      in: path
+      name: tournamentId
+      required: true
+      schema: {type: string, pattern: "^[0-9]+$"}
+  responses:
+    TransactionIntent:
+      description: Browser transaction intent
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/TransactionIntent"}
+  schemas:
+    TournamentList:
+      type: object
+      required: [items]
+      properties:
+        items: {type: array, items: {$ref: "#/components/schemas/TournamentSummary"}}
+    TournamentSummary:
+      type: object
+      required: [tournamentId, title, organizer, resultSubmitter, entryFeeWei, prizePoolWei, participantCount, minParticipants, maxParticipants, registrationDeadline, resultDeadline, organizerFeeBps, payoutBps, state, registered, claimablePrizeWei, refundableWei]
+      properties:
+        tournamentId: {type: string}
+        title: {type: string}
+        organizer: {type: string}
+        resultSubmitter: {type: string}
+        entryFeeWei: {type: string, pattern: "^[0-9]+$"}
+        prizePoolWei: {type: string, pattern: "^[0-9]+$"}
+        participantCount: {type: integer}
+        minParticipants: {type: integer}
+        maxParticipants: {type: integer}
+        registrationDeadline: {type: integer, format: int64}
+        resultDeadline: {type: integer, format: int64}
+        organizerFeeBps: {type: integer, minimum: 0, maximum: 1000}
+        payoutBps: {type: array, items: {type: integer}, maxItems: 32}
+        state: {type: string, enum: [open, settled, cancelled]}
+        registered: {type: boolean}
+        claimablePrizeWei: {type: string}
+        refundableWei: {type: string}
+    TransactionIntent:
+      type: object
+      required: [intentId, requiresPlayerAction]
+      properties:
+        intentId: {type: string}
+        requiresPlayerAction: {type: boolean}
+        actionUrl: {type: string, format: uri}
+    TransactionStatus:
+      type: object
+      required: [state]
+      properties:
+        state: {type: string, enum: [pending, confirmed, failed, expired]}
+        txHash: {type: string}
+        error: {type: string}

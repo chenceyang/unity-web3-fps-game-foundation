@@ -1,0 +1,24 @@
+{
+  "name": "com.web3fps.game-foundation",
+  "version": "1.0.0",
+  "displayName": "Web3 FPS Game Foundation",
+  "description": "Unity game-side foundation for a server-authoritative FPS with NFT assets, rewards, tournaments and match attestations.",
+  "unity": "2022.3",
+  "author": {
+    "name": "Web3 FPS Team"
+  },
+  "keywords": [
+    "fps",
+    "web3",
+    "nft",
+    "tournament",
+    "unity"
+  ],
+  "samples": [
+    {
+      "displayName": "Bootstrap Example",
+      "description": "Mock bootstrap scripts only; no scene, prefab or UI is included.",
+      "path": "Samples~/Bootstrap"
+    }
+  ]
+}
