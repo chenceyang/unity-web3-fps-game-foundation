@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.2 - 2026-08-07
+
+- Rebalanced the first-person view model so temporary arm blockouts no longer dominate the camera or resemble malformed characters.
+- Preserved the skeletal enemy's imported materials while adding a readable Coral team tint, enforced skinned-mesh visibility and full shadow rendering.
+- Moved the initial enemy into a clear sightline and replaced the tiny beacon with a high-contrast team mark.
+
 ## 1.6.1 - 2026-08-07
 
 - Moved the Coral bot spawn out from behind the solid relay core and added lightweight obstacle steering so it remains visible and can pursue the player.

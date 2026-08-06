@@ -246,9 +246,10 @@ namespace Web3Fps.GameFoundation.Editor
             heldWeapon.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
             heldWeapon.transform.localScale = Vector3.one * 0.72f;
 
-            var rig = CreateRiggedCharacter(CoralCharacterFbx, "CoralSkeleton", source.transform, 2.16f, animatorController);
+            var rig = CreateRiggedCharacter(CoralCharacterFbx, "CoralSkeleton", source.transform, 1.9f, animatorController);
             if (rig != null)
             {
+                PrepareRigRenderers(rig, new Color(0.88f, 0.22f, 0.17f), "CoralRig");
                 visual.gameObject.SetActive(false);
                 var hand = FindDescendant(rig.transform, "LowerArm.R") ?? rig.transform;
                 heldWeapon.transform.SetParent(hand, false);
@@ -382,7 +383,7 @@ namespace Web3Fps.GameFoundation.Editor
             spawnRoot.SetParent(root);
             var playerSpawn = CreateSpawn("CobaltSpawn", new Vector3(-18f, 0f, 0f), Quaternion.LookRotation(Vector3.right), spawnRoot);
             // Keep the first opponent visible instead of placing it directly behind the relay core.
-            var botSpawn = CreateSpawn("CoralSpawn", new Vector3(15f, 0f, 7.5f), Quaternion.LookRotation(new Vector3(-1f, 0f, -0.3f)), spawnRoot);
+            var botSpawn = CreateSpawn("CoralSpawn", new Vector3(12f, 0f, 8f), Quaternion.LookRotation(new Vector3(-1f, 0f, -0.35f)), spawnRoot);
             var player = (GameObject)PrefabUtility.InstantiatePrefab(playerSource);
             var bot = (GameObject)PrefabUtility.InstantiatePrefab(botSource);
             player.name = "CobaltOperator";
@@ -402,9 +403,9 @@ namespace Web3Fps.GameFoundation.Editor
 
             var held = Object.Instantiate(viewWeapon, aimSource);
             held.name = "KESTREL-7 // View Model";
-            held.transform.localPosition = new Vector3(0.36f, -0.31f, 0.78f);
+            held.transform.localPosition = new Vector3(0.3f, -0.38f, 0.86f);
             held.transform.localRotation = Quaternion.Euler(2f, -90f, 0f);
-            held.transform.localScale = Vector3.one * 0.72f;
+            held.transform.localScale = Vector3.one * 0.5f;
             CreateFirstPersonArms(aimSource, palette);
             var viewMagazine = FindDescendant(held.transform, "Magazine");
             var weaponPresentation = held.AddComponent<FirstPersonWeaponPresentation>();
@@ -417,7 +418,8 @@ namespace Web3Fps.GameFoundation.Editor
             var botController = bot.GetComponent<PrototypeBotController>();
             botParticipant.Configure("prototype-bot", "Coral", "coral", botSpawn, new MonoBehaviour[] { botController });
             botController.Configure(botParticipant, playerParticipant);
-            CreateVisualPrimitive("CoralTargetBeacon", PrimitiveType.Cube, new Vector3(0f, 2.62f, 0f), new Vector3(0.13f, 0.13f, 0.13f), palette["coralGlow"], bot.transform, new Vector3(0f, 45f, 45f));
+            CreateVisualPrimitive("CoralTargetMarkA", PrimitiveType.Cube, new Vector3(0f, 2.38f, 0f), new Vector3(0.32f, 0.045f, 0.045f), palette["coralGlow"], bot.transform, new Vector3(0f, 0f, 45f));
+            CreateVisualPrimitive("CoralTargetMarkB", PrimitiveType.Cube, new Vector3(0f, 2.38f, 0f), new Vector3(0.32f, 0.045f, 0.045f), palette["coralGlow"], bot.transform, new Vector3(0f, 0f, -45f));
 
             var systems = new GameObject("RiftRelaySystems");
             systems.transform.SetParent(root);
@@ -438,7 +440,8 @@ namespace Web3Fps.GameFoundation.Editor
         {
             var importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
             if (importer == null) throw new InvalidOperationException("Missing skeletal character FBX: " + assetPath);
-            var changed = importer.animationType != ModelImporterAnimationType.Generic || !importer.importAnimation;
+            var changed = importer.animationType != ModelImporterAnimationType.Generic ||
+                          !importer.importAnimation || importer.importCameras || importer.importLights;
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.importAnimation = true;
             importer.importCameras = false;
@@ -540,6 +543,39 @@ namespace Web3Fps.GameFoundation.Editor
             bounds = renderers[0].bounds;
             for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
             character.transform.position += Vector3.up * (character.transform.parent.position.y - bounds.min.y);
+        }
+
+        private static void PrepareRigRenderers(GameObject character, Color teamTint, string materialPrefix)
+        {
+            var materialCopies = new Dictionary<Material, Material>();
+            var materialIndex = 0;
+            foreach (var renderer in character.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.shadowCastingMode = ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+                if (renderer is SkinnedMeshRenderer skinned) skinned.updateWhenOffscreen = true;
+
+                var materials = renderer.sharedMaterials;
+                for (var i = 0; i < materials.Length; i++)
+                {
+                    var source = materials[i];
+                    if (source == null) continue;
+                    if (!materialCopies.TryGetValue(source, out var copy))
+                    {
+                        copy = new Material(source) { name = materialPrefix + "_" + materialIndex++ };
+                        var colorProperty = copy.HasProperty("_BaseColor") ? "_BaseColor" : "_Color";
+                        if (copy.HasProperty(colorProperty))
+                        {
+                            var sourceColor = copy.GetColor(colorProperty);
+                            copy.SetColor(colorProperty, Color.Lerp(sourceColor, teamTint, 0.42f));
+                        }
+                        AssetDatabase.CreateAsset(copy, Materials + "/" + copy.name + ".mat");
+                        materialCopies.Add(source, copy);
+                    }
+                    materials[i] = copy;
+                }
+                renderer.sharedMaterials = materials;
+            }
         }
 
         private static Transform FindDescendant(Transform root, string name)
@@ -749,21 +785,19 @@ namespace Web3Fps.GameFoundation.Editor
         {
             var rig = new GameObject("FirstPersonArms").transform;
             rig.SetParent(camera, false);
-            rig.localPosition = new Vector3(0f, -0.04f, 0.12f);
-            rig.localScale = Vector3.one * 0.52f;
-            CreateVisualPrimitive("LeftSleeve", PrimitiveType.Capsule, new Vector3(-0.23f, -0.38f, 0.6f), new Vector3(0.13f, 0.34f, 0.13f), palette["graphite"], rig, new Vector3(68f, 0f, -16f));
-            CreateVisualPrimitive("RightSleeve", PrimitiveType.Capsule, new Vector3(0.25f, -0.39f, 0.63f), new Vector3(0.13f, 0.36f, 0.13f), palette["graphite"], rig, new Vector3(66f, 0f, 15f));
-            CreateVisualPrimitive("LeftForearmArmor", PrimitiveType.Cube, new Vector3(-0.18f, -0.31f, 0.73f), new Vector3(0.18f, 0.28f, 0.18f), palette["armor"], rig, new Vector3(18f, 0f, -10f));
-            CreateVisualPrimitive("RightForearmArmor", PrimitiveType.Cube, new Vector3(0.3f, -0.31f, 0.76f), new Vector3(0.18f, 0.3f, 0.18f), palette["armor"], rig, new Vector3(16f, 0f, 10f));
-            CreateVisualPrimitive("LeftGlove", PrimitiveType.Sphere, new Vector3(-0.1f, -0.23f, 0.84f), new Vector3(0.14f, 0.12f, 0.17f), palette["graphite"], rig);
-            CreateVisualPrimitive("RightGlove", PrimitiveType.Sphere, new Vector3(0.36f, -0.24f, 0.88f), new Vector3(0.14f, 0.12f, 0.17f), palette["graphite"], rig);
-            CreateVisualPrimitive("CobaltWristSignal", PrimitiveType.Cube, new Vector3(0.32f, -0.29f, 0.86f), new Vector3(0.12f, 0.035f, 0.09f), palette["cobaltGlow"], rig);
-            CreateVisualPrimitive("LeftSleeveBand", PrimitiveType.Cube, new Vector3(-0.24f, -0.4f, 0.56f), new Vector3(0.19f, 0.05f, 0.17f), palette["cobalt"], rig, new Vector3(18f, 0f, -10f));
-            CreateVisualPrimitive("RightSleeveBand", PrimitiveType.Cube, new Vector3(0.26f, -0.4f, 0.58f), new Vector3(0.19f, 0.05f, 0.17f), palette["cobalt"], rig, new Vector3(16f, 0f, 10f));
+            rig.localPosition = new Vector3(0.04f, -0.12f, 0.18f);
+            rig.localScale = Vector3.one * 0.3f;
+            CreateVisualPrimitive("LeftSleeve", PrimitiveType.Capsule, new Vector3(-0.12f, -0.5f, 0.72f), new Vector3(0.1f, 0.27f, 0.1f), palette["graphite"], rig, new Vector3(72f, 0f, -12f));
+            CreateVisualPrimitive("RightSleeve", PrimitiveType.Capsule, new Vector3(0.28f, -0.53f, 0.7f), new Vector3(0.1f, 0.29f, 0.1f), palette["graphite"], rig, new Vector3(70f, 0f, 12f));
+            CreateVisualPrimitive("LeftForearmArmor", PrimitiveType.Cube, new Vector3(-0.08f, -0.39f, 0.8f), new Vector3(0.12f, 0.2f, 0.12f), palette["armor"], rig, new Vector3(20f, 0f, -8f));
+            CreateVisualPrimitive("RightForearmArmor", PrimitiveType.Cube, new Vector3(0.3f, -0.41f, 0.82f), new Vector3(0.12f, 0.21f, 0.12f), palette["armor"], rig, new Vector3(18f, 0f, 8f));
+            CreateVisualPrimitive("LeftGlove", PrimitiveType.Sphere, new Vector3(-0.02f, -0.3f, 0.88f), new Vector3(0.1f, 0.08f, 0.12f), palette["graphite"], rig);
+            CreateVisualPrimitive("RightGlove", PrimitiveType.Sphere, new Vector3(0.34f, -0.31f, 0.91f), new Vector3(0.1f, 0.08f, 0.12f), palette["graphite"], rig);
+            CreateVisualPrimitive("CobaltWristSignal", PrimitiveType.Cube, new Vector3(0.3f, -0.39f, 0.84f), new Vector3(0.09f, 0.025f, 0.065f), palette["cobaltGlow"], rig);
             for (var finger = 0; finger < 3; finger++)
             {
-                CreateVisualPrimitive("LeftGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(-0.14f + finger * 0.04f, -0.19f, 0.92f), new Vector3(0.03f, 0.025f, 0.06f), palette["armor"], rig);
-                CreateVisualPrimitive("RightGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(0.32f + finger * 0.04f, -0.2f, 0.96f), new Vector3(0.03f, 0.025f, 0.06f), palette["armor"], rig);
+                CreateVisualPrimitive("LeftGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(-0.05f + finger * 0.03f, -0.27f, 0.94f), new Vector3(0.022f, 0.018f, 0.045f), palette["armor"], rig);
+                CreateVisualPrimitive("RightGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(0.31f + finger * 0.03f, -0.28f, 0.97f), new Vector3(0.022f, 0.018f, 0.045f), palette["armor"], rig);
             }
         }
 
