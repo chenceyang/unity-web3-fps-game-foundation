@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.4 - 2026-08-07
+
+- Selects Built-in, URP or HDRP shaders from the project's active render pipeline instead of installed shader availability.
+- Prevents the scene generator from running in Play Mode or while scripts are compiling.
+- Eliminates the magenta-material failure in Built-in Render Pipeline projects.
+
 ## 1.4.3 - 2026-08-07
 
 - Fixed Unity 6 dropping the generated UIDocument PanelSettings reference, which prevented the lobby and combat UI from rendering.

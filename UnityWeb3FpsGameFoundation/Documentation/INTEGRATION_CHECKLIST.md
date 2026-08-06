@@ -10,6 +10,7 @@
 - [x] v1.4.1 加入实际场景使用的轨道背景、开放式边界、工业塔群、雾效、发光材质和局部灯光。
 - [x] v1.4.2 使用包内独立角色 Prefab，加入敌方装甲人形和第一人称双臂，避免旧 Prefab 的 missing script。
 - [x] v1.4.3 显式持久化 UIDocument 的 PanelSettings/UXML 引用，并将轨道背景设为双面渲染。
+- [x] v1.4.4 根据激活的渲染管线选择 Shader，并阻止在 Play Mode/编译过程中执行生成器。
 - [x] NFT 槽位与武器内容目录具备 EditMode 覆盖；静态审计 35/35 通过。
 - [ ] 在 Unity 6000.3.21f1 中执行生成器并确认 UXML/USS 无导入错误。
 - [ ] 手工完成大厅进入 RIFT RELAY、击杀、复活和结算的一整局。

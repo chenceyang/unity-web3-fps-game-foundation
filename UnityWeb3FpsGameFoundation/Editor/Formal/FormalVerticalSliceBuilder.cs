@@ -34,6 +34,20 @@ namespace Web3Fps.GameFoundation.Editor
         [MenuItem("Tools/Web3 FPS/Create ASH LEDGER Vertical Slice")]
         public static void Create()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                EditorUtility.DisplayDialog(
+                    "Stop Play Mode",
+                    "Stop Play Mode before rebuilding the ASH//LEDGER scenes.",
+                    "OK");
+                return;
+            }
+            if (EditorApplication.isCompiling)
+            {
+                EditorUtility.DisplayDialog("Scripts Are Compiling", "Wait for compilation to finish, then run the generator again.", "OK");
+                return;
+            }
+
             if (AssetDatabase.IsValidFolder(Root) && !EditorUtility.DisplayDialog(
                     "Rebuild ASH//LEDGER Vertical Slice",
                     "The generated Assets/AshLedgerVerticalSlice folder will be replaced.",
@@ -61,6 +75,12 @@ namespace Web3Fps.GameFoundation.Editor
             EditorGUIUtility.PingObject(sceneAsset);
             EditorSceneManager.OpenScene(LobbyScene);
             Debug.Log("ASH//LEDGER vertical slice created. Lobby is open; press Play, then select DEPLOY TO RIFT RELAY.");
+        }
+
+        [MenuItem("Tools/Web3 FPS/Create ASH LEDGER Vertical Slice", true)]
+        private static bool ValidateCreate()
+        {
+            return !EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling;
         }
 
         private static Dictionary<string, Material> CreatePalette()
@@ -606,7 +626,7 @@ namespace Web3Fps.GameFoundation.Editor
 
         private static Material CreateMaterial(string name, Color color, float smoothness)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var shader = ResolveLitShader();
             var material = new Material(shader) { color = color };
             if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smoothness);
             AssetDatabase.CreateAsset(material, Materials + "/" + name + ".mat");
@@ -631,7 +651,7 @@ namespace Web3Fps.GameFoundation.Editor
             string texturePath,
             float smoothness)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var shader = ResolveLitShader();
             var material = new Material(shader) { color = color };
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
             if (texture == null) throw new InvalidOperationException("Missing formal material texture: " + texturePath);
@@ -644,9 +664,7 @@ namespace Web3Fps.GameFoundation.Editor
 
         private static Material CreateBackdropMaterial()
         {
-            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
-                         Shader.Find("Unlit/Texture") ??
-                         Shader.Find("Standard");
+            var shader = ResolveUnlitShader();
             var material = new Material(shader) { color = Color.white };
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropTexture);
             if (texture == null) throw new InvalidOperationException("Missing formal backdrop texture: " + BackdropTexture);
@@ -656,6 +674,28 @@ namespace Web3Fps.GameFoundation.Editor
             material.doubleSidedGI = true;
             AssetDatabase.CreateAsset(material, Materials + "/OrbitalVista.mat");
             return material;
+        }
+
+        private static Shader ResolveLitShader()
+        {
+            if (GraphicsSettings.currentRenderPipeline == null)
+                return Shader.Find("Standard") ?? Shader.Find("Universal Render Pipeline/Lit");
+
+            var pipelineName = GraphicsSettings.currentRenderPipeline.GetType().FullName ?? string.Empty;
+            if (pipelineName.Contains("HDRenderPipeline"))
+                return Shader.Find("HDRP/Lit") ?? Shader.Find("Standard");
+            return Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+        }
+
+        private static Shader ResolveUnlitShader()
+        {
+            if (GraphicsSettings.currentRenderPipeline == null)
+                return Shader.Find("Unlit/Texture") ?? Shader.Find("Standard");
+
+            var pipelineName = GraphicsSettings.currentRenderPipeline.GetType().FullName ?? string.Empty;
+            if (pipelineName.Contains("HDRenderPipeline"))
+                return Shader.Find("HDRP/Unlit") ?? Shader.Find("Unlit/Texture");
+            return Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Texture");
         }
 
         private static void SaveGeneratedScene(Scene scene, string path)
