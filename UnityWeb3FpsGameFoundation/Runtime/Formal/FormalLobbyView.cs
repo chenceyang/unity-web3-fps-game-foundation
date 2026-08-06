@@ -15,6 +15,7 @@ namespace Web3Fps.GameFoundation.Formal
         [SerializeField] private Web3LobbyController controller;
         [SerializeField] private UIDocument document;
         [SerializeField] private string playSceneName = FormalContentCatalog.RiftRelaySceneName;
+        [SerializeField] private PanelSettings fallbackPanelSettings;
 
         private VisualElement _root;
         private Label _status;
@@ -27,19 +28,26 @@ namespace Web3Fps.GameFoundation.Formal
         private Button _playButton;
         private Button _refreshButton;
         private Button _walletButton;
+        private PanelSettings _runtimePanelSettings;
 
-        public void Configure(Web3LobbyController lobbyController, UIDocument uiDocument, string gameplaySceneName)
+        public void Configure(
+            Web3LobbyController lobbyController,
+            UIDocument uiDocument,
+            string gameplaySceneName,
+            PanelSettings fallbackSettings = null)
         {
             controller = lobbyController;
             document = uiDocument;
             playSceneName = string.IsNullOrWhiteSpace(gameplaySceneName)
                 ? FormalContentCatalog.RiftRelaySceneName
                 : gameplaySceneName;
+            fallbackPanelSettings = fallbackSettings;
         }
 
         private void OnEnable()
         {
             if (document == null) document = GetComponent<UIDocument>();
+            EnsurePanelSettings();
             _root = document == null ? null : document.rootVisualElement;
             if (_root == null) return;
             CacheElements();
@@ -55,6 +63,26 @@ namespace Web3Fps.GameFoundation.Formal
             if (_playButton != null) _playButton.clicked -= Play;
             if (_refreshButton != null) _refreshButton.clicked -= Refresh;
             if (_walletButton != null) _walletButton.clicked -= BindWallet;
+        }
+
+        private void OnDestroy()
+        {
+            if (_runtimePanelSettings != null) Destroy(_runtimePanelSettings);
+        }
+
+        private void EnsurePanelSettings()
+        {
+            if (document == null || document.panelSettings != null) return;
+            if (fallbackPanelSettings != null)
+            {
+                document.panelSettings = fallbackPanelSettings;
+                return;
+            }
+            _runtimePanelSettings = ScriptableObject.CreateInstance<PanelSettings>();
+            _runtimePanelSettings.name = "ASH LEDGER Runtime Panel Settings";
+            FormalUiPanelDefaults.Configure(_runtimePanelSettings);
+            document.panelSettings = _runtimePanelSettings;
+            Debug.LogWarning("ASH//LEDGER created runtime PanelSettings because the generated scene reference was unavailable.", this);
         }
 
         private void CacheElements()

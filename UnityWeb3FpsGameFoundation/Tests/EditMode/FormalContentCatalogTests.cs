@@ -29,5 +29,13 @@ namespace Web3Fps.GameFoundation.Tests
         {
             Assert.Throws<System.ArgumentOutOfRangeException>(() => FormalContentCatalog.GetSlotName(3));
         }
+
+        [Test]
+        public void FormalUiUsesFullHdReferenceResolution()
+        {
+            Assert.That(FormalUiPanelDefaults.ReferenceWidth, Is.EqualTo(1920));
+            Assert.That(FormalUiPanelDefaults.ReferenceHeight, Is.EqualTo(1080));
+            Assert.That(FormalUiPanelDefaults.SortingOrder, Is.GreaterThan(0));
+        }
     }
 }

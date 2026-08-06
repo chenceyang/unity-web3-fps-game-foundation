@@ -2,7 +2,7 @@
 
 状态：首发方向已进入 Gate B 垂直切片制作；可用于概念验证、外包 Brief、UI 原型、地图 Greybox 和武器内容排期。
 
-适用底层：`com.web3fps.game-foundation` 1.4.5。本文只定义游戏表现和内容，不改变现有安全边界：
+适用底层：`com.web3fps.game-foundation` 1.4.6。本文只定义游戏表现和内容，不改变现有安全边界：
 战斗由权威服务器判定；Web3 仅管理所有权、来源、展示、奖励、赛事资金和结果存证；NFT 永不改变战斗数值。
 
 ![ASH//LEDGER 首个垂直切片概念板](Visuals/ash-ledger-concept-board-v1.png)

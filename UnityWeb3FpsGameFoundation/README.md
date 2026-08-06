@@ -70,6 +70,7 @@ Prototype Prefab；v1.4.3 修复 Unity 6 生成场景丢失 PanelSettings 导致
 `Assets` 下，可继续编辑。v1.4.4 会根据项目当前的 Built-in / URP / HDRP 渲染管线选择材质 Shader，并禁止在
 Play Mode 中运行生成器。
 v1.4.5 进一步修正 Unity 6 在 `UIDocument.OnEnable` 时清空 PanelSettings 的顺序问题，并在生成阶段强制校验引用。
+v1.4.6 不再依赖 UIDocument 自身保存该引用：正式 View 会保存备用 PanelSettings，并在运行时自动恢复 UI。
 角色与建筑仍是制作级模块资产，并非概念图中的最终高精度模型；背景视觉已作为实际场景资源接入。
 
 ## Web3 大厅
@@ -167,7 +168,7 @@ Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITo
 截至 2026-08-06，v1.0 运行时程序集和测试程序集已在 Unity 6000.3.21f1 编译；纯 C# 审计通过。
 v1.4 新增 ASH//LEDGER 正式垂直切片生成器、内容目录和 UI Toolkit 表现，仍需在 Unity 中生成后记录
 完整 Test Runner 与 Play Mode 实机结果。仓库的静态审计脚本已使用 Unity 6000.3.21f1 自带 Roslyn
-编译 Runtime、Editor 和 Tests 三个程序集，并执行 35 个测试全部通过；
+编译 Runtime、Editor 和 Tests 三个程序集，并执行 36 个测试全部通过；
 该结果不替代 Unity Editor/Test Runner。
 联网和真实后端的端到端验收尚未完成。
 

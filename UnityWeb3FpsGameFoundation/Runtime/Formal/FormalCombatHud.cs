@@ -11,6 +11,7 @@ namespace Web3Fps.GameFoundation.Formal
         [SerializeField] private UIDocument document;
         [SerializeField] private PrototypeMatchController match;
         [SerializeField] private PrototypeParticipant player;
+        [SerializeField] private PanelSettings fallbackPanelSettings;
 
         private Label _score;
         private Label _timer;
@@ -18,17 +19,24 @@ namespace Web3Fps.GameFoundation.Formal
         private VisualElement _healthFill;
         private VisualElement _result;
         private Label _resultTitle;
+        private PanelSettings _runtimePanelSettings;
 
-        public void Configure(UIDocument uiDocument, PrototypeMatchController matchController, PrototypeParticipant localPlayer)
+        public void Configure(
+            UIDocument uiDocument,
+            PrototypeMatchController matchController,
+            PrototypeParticipant localPlayer,
+            PanelSettings fallbackSettings = null)
         {
             document = uiDocument;
             match = matchController;
             player = localPlayer;
+            fallbackPanelSettings = fallbackSettings;
         }
 
         private void OnEnable()
         {
             if (document == null) document = GetComponent<UIDocument>();
+            EnsurePanelSettings();
             var root = document == null ? null : document.rootVisualElement;
             if (root == null) return;
             _score = root.Q<Label>("score-label");
@@ -37,6 +45,25 @@ namespace Web3Fps.GameFoundation.Formal
             _healthFill = root.Q<VisualElement>("health-fill");
             _result = root.Q<VisualElement>("result-panel");
             _resultTitle = root.Q<Label>("result-title");
+        }
+
+        private void OnDestroy()
+        {
+            if (_runtimePanelSettings != null) Destroy(_runtimePanelSettings);
+        }
+
+        private void EnsurePanelSettings()
+        {
+            if (document == null || document.panelSettings != null) return;
+            if (fallbackPanelSettings != null)
+            {
+                document.panelSettings = fallbackPanelSettings;
+                return;
+            }
+            _runtimePanelSettings = ScriptableObject.CreateInstance<PanelSettings>();
+            _runtimePanelSettings.name = "ASH LEDGER Combat Runtime Panel Settings";
+            FormalUiPanelDefaults.Configure(_runtimePanelSettings);
+            document.panelSettings = _runtimePanelSettings;
         }
 
         private void Update()

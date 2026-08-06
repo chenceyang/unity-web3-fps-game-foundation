@@ -12,6 +12,7 @@
 - [x] v1.4.3 显式持久化 UIDocument 的 PanelSettings/UXML 引用，并将轨道背景设为双面渲染。
 - [x] v1.4.4 根据激活的渲染管线选择 Shader，并阻止在 Play Mode/编译过程中执行生成器。
 - [x] v1.4.5 在 UIDocument OnEnable 后写入并校验 PanelSettings，背景同时生成反向平面。
+- [x] v1.4.6 正式 View 保存备用 PanelSettings，并在运行时恢复 UIDocument；静态审计 36/36 通过。
 - [x] NFT 槽位与武器内容目录具备 EditMode 覆盖；静态审计 35/35 通过。
 - [ ] 在 Unity 6000.3.21f1 中执行生成器并确认 UXML/USS 无导入错误。
 - [ ] 手工完成大厅进入 RIFT RELAY、击杀、复活和结算的一整局。

@@ -238,10 +238,7 @@ namespace Web3Fps.GameFoundation.Editor
         {
             const string path = Root + "/AshLedgerPanelSettings.asset";
             var settings = ScriptableObject.CreateInstance<PanelSettings>();
-            settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            settings.referenceResolution = new Vector2Int(1920, 1080);
-            settings.match = 0.5f;
-            settings.sortingOrder = 20;
+            FormalUiPanelDefaults.Configure(settings);
             AssetDatabase.CreateAsset(settings, path);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
@@ -272,7 +269,7 @@ namespace Web3Fps.GameFoundation.Editor
 
             serialized.Update();
             if (serialized.FindProperty("m_PanelSettings").objectReferenceValue == null)
-                throw new InvalidOperationException("Unity did not persist the generated UI PanelSettings reference.");
+                Debug.LogWarning("Unity did not persist PanelSettings; the runtime UI fallback will create one when the scene starts.");
         }
 
         private static void CreateLobbyScene(
@@ -330,7 +327,7 @@ namespace Web3Fps.GameFoundation.Editor
             var document = systems.AddComponent<UIDocument>();
             ConfigureDocument(document, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(LobbyUxml));
             var view = systems.AddComponent<FormalLobbyView>();
-            view.Configure(lobby, document, FormalContentCatalog.RiftRelaySceneName);
+            view.Configure(lobby, document, FormalContentCatalog.RiftRelaySceneName, panelSettings);
 
             SaveGeneratedScene(scene, LobbyScene);
         }
@@ -390,7 +387,7 @@ namespace Web3Fps.GameFoundation.Editor
             var document = systems.AddComponent<UIDocument>();
             ConfigureDocument(document, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(CombatUxml));
             var hud = systems.AddComponent<FormalCombatHud>();
-            hud.Configure(document, match, playerParticipant);
+            hud.Configure(document, match, playerParticipant, panelSettings);
 
             SaveGeneratedScene(scene, RelayScene);
         }

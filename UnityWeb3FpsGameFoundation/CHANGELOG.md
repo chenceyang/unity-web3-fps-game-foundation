@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.6 - 2026-08-07
+
+- Added a runtime PanelSettings fallback so the UI Toolkit lobby and combat HUD recover when Unity 6 clears UIDocument's scene reference.
+- Stores the generated PanelSettings on the formal view components, preserving the default theme during runtime recovery.
+- Added formal panel default coverage; the static audit now passes 36 tests.
+
 ## 1.4.5 - 2026-08-07
 
 - Reloads PanelSettings after synchronous asset import and writes the UIDocument reference after Unity 6 OnEnable completes.
