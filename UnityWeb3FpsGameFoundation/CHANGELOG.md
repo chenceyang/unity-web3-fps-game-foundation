@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 - 2026-08-06
+
+- Replaced the enclosed color-block arena presentation with an open orbital-industrial RIFT RELAY visual slice.
+- Added a project-owned broken-ring orbital backdrop, fog, emissive navigation, industrial towers, relay lighting and architectural framing.
+- Improved the three weapon blockouts and fixed view-model instantiation so the combat scene is saved reliably.
+
 ## 1.4.0 - 2026-08-06
 
 - Added a one-click ASH//LEDGER vertical-slice generator with a formal UI Toolkit lobby and combat HUD.

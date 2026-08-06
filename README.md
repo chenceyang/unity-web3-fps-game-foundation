@@ -8,7 +8,7 @@
 - `UnityWeb3FpsGameFoundation/README.md`：包安装、接口和集成合同。
 - `UnityWeb3FpsGameFoundation/Documentation/INTEGRATION_CHECKLIST.md`：尚未完成的游戏/服务器接入清单。
 - `UnityWeb3FpsGameFoundation/Documentation/FORMAL_CONTENT_DESIGN.md`：正式 UI、美术、地图、武器与 Web3 创意的制作规格。
-- `outputs/UnityWeb3FpsGameFoundation_v1.4.zip`：由包源码生成的当前分发产物，不是编辑源。
+- `outputs/UnityWeb3FpsGameFoundation_v1.4.1.zip`：由包源码生成的当前分发产物，不是编辑源。
 - `tools/build_game_design_doc.py`：需求文档 DOCX 的可复现生成器。
 - `references/`：带来源和哈希说明的上游只读快照。
 - `work/`：一次性编译审计与 PDF 检查产物，不是项目事实来源。
@@ -27,8 +27,8 @@
   完整 Unity 批处理验证仍被 Licensing Client 阻塞。
 - v1.3 已加入 entitlement-check 适配器、默认外观降级、冻结 loadout 快照、权威对局会话和结果发布去重/重试边界；
   尚未接入具体联网 SDK、真实专用服务器进程和持久化后端队列。
-- v1.4 已开始正式内容制作：加入 UI Toolkit 大厅、RIFT RELAY 三路灰盒地图、正式战斗 HUD、三把武器 Prefab
-  和 Mock Web3 状态绑定；Runtime、Editor、Tests 静态编译通过，35 个测试全部通过。
+- v1.4.1 已开始正式内容制作：加入 UI Toolkit 大厅、RIFT RELAY 三路地图、正式战斗 HUD、三把武器 Prefab、
+  Mock Web3 状态绑定，以及实际接入的轨道背景、工业建筑层次、雾效和发光照明；静态编译通过，35 个测试全部通过。
 
 ## 尚未完成
 

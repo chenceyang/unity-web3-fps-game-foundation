@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 using Web3Fps.GameFoundation.Composition;
 using Web3Fps.GameFoundation.Formal;
@@ -11,6 +13,7 @@ using Web3Fps.GameFoundation.Gameplay;
 using Web3Fps.GameFoundation.Gameplay.Combat;
 using Web3Fps.GameFoundation.Lobby;
 using Web3Fps.GameFoundation.Prototype;
+using Object = UnityEngine.Object;
 
 namespace Web3Fps.GameFoundation.Editor
 {
@@ -27,6 +30,7 @@ namespace Web3Fps.GameFoundation.Editor
         private const string BotPrefab = "Assets/Web3FpsPrototype/Prefabs/PrototypeBot.prefab";
         private const string LobbyUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerLobby.uxml";
         private const string CombatUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerCombatHud.uxml";
+        private const string BackdropTexture = "Packages/com.web3fps.game-foundation/Runtime/Formal/Art/RiftRelayOrbitalBackdrop.png";
 
         [MenuItem("Tools/Web3 FPS/Create ASH LEDGER Vertical Slice")]
         public static void Create()
@@ -76,7 +80,11 @@ namespace Web3Fps.GameFoundation.Editor
                 ["copper"] = CreateMaterial("Copper", new Color(0.72f, 0.3f, 0.12f), 0.28f),
                 ["cobalt"] = CreateMaterial("Cobalt", new Color(0.06f, 0.42f, 0.78f), 0.22f),
                 ["coral"] = CreateMaterial("Coral", new Color(0.88f, 0.16f, 0.13f), 0.25f),
-                ["aurora"] = CreateMaterial("Aurora", new Color(0.18f, 0.88f, 0.66f), 0.18f)
+                ["aurora"] = CreateEmissiveMaterial("Aurora", new Color(0.18f, 0.88f, 0.66f), 2.4f),
+                ["cobaltGlow"] = CreateEmissiveMaterial("CobaltGlow", new Color(0.06f, 0.42f, 0.78f), 1.8f),
+                ["coralGlow"] = CreateEmissiveMaterial("CoralGlow", new Color(0.88f, 0.16f, 0.13f), 1.8f),
+                ["warmGlow"] = CreateEmissiveMaterial("WarmGlow", new Color(0.94f, 0.48f, 0.18f), 2.1f),
+                ["backdrop"] = CreateBackdropMaterial()
             };
         }
 
@@ -84,9 +92,9 @@ namespace Web3Fps.GameFoundation.Editor
         {
             return new[]
             {
-                CreateWeapon("KESTREL-7", new Vector3(1.18f, 0.18f, 0.16f), palette["cobalt"], palette["graphite"], true),
-                CreateWeapon("PULSE-9", new Vector3(0.82f, 0.22f, 0.18f), palette["coral"], palette["graphite"], true),
-                CreateWeapon("RELAY-3", new Vector3(0.58f, 0.17f, 0.13f), palette["aurora"], palette["graphite"], false)
+                CreateWeapon("KESTREL-7", new Vector3(1.18f, 0.18f, 0.16f), palette["cobalt"], palette["graphite"], palette["bone"], true),
+                CreateWeapon("PULSE-9", new Vector3(0.82f, 0.22f, 0.18f), palette["coral"], palette["graphite"], palette["bone"], true),
+                CreateWeapon("RELAY-3", new Vector3(0.58f, 0.17f, 0.13f), palette["aurora"], palette["graphite"], palette["bone"], false)
             };
         }
 
@@ -95,15 +103,24 @@ namespace Web3Fps.GameFoundation.Editor
             Vector3 receiverScale,
             Material accent,
             Material dark,
+            Material shell,
             bool stock)
         {
             var root = new GameObject(name);
-            CreatePart("Receiver", Vector3.zero, receiverScale, dark, root.transform);
+            CreatePart("Receiver", Vector3.zero, receiverScale, shell, root.transform);
+            CreatePart("LowerReceiver", new Vector3(-0.08f, -0.09f, 0f), new Vector3(receiverScale.x * 0.72f, receiverScale.y * 0.62f, receiverScale.z * 1.08f), dark, root.transform);
             CreatePart("AccentRail", new Vector3(0f, 0.12f, 0f), new Vector3(receiverScale.x * 0.62f, 0.035f, 0.19f), accent, root.transform);
-            CreatePart("Barrel", new Vector3(receiverScale.x * 0.68f, 0.015f, 0f), new Vector3(receiverScale.x * 0.46f, 0.075f, 0.075f), dark, root.transform);
+            CreatePart("BarrelShroud", new Vector3(receiverScale.x * 0.57f, 0.015f, 0f), new Vector3(receiverScale.x * 0.32f, 0.12f, 0.12f), dark, root.transform);
+            CreatePrimitive("Muzzle", PrimitiveType.Cylinder, new Vector3(receiverScale.x * 0.8f, 0.015f, 0f), new Vector3(0.075f, receiverScale.x * 0.18f, 0.075f), dark, root.transform, new Vector3(0f, 0f, 90f));
             CreatePart("Grip", new Vector3(-receiverScale.x * 0.16f, -0.2f, 0f), new Vector3(0.12f, 0.28f, 0.12f), dark, root.transform, new Vector3(0f, 0f, -12f));
             CreatePart("Magazine", new Vector3(0.12f, -0.18f, 0f), new Vector3(0.13f, 0.27f, 0.12f), accent, root.transform, new Vector3(0f, 0f, 7f));
-            if (stock) CreatePart("Stock", new Vector3(-receiverScale.x * 0.68f, -0.015f, 0f), new Vector3(receiverScale.x * 0.35f, 0.17f, 0.13f), dark, root.transform);
+            CreatePart("RearSight", new Vector3(-receiverScale.x * 0.22f, 0.18f, 0f), new Vector3(0.06f, 0.09f, 0.18f), dark, root.transform);
+            CreatePart("FrontSight", new Vector3(receiverScale.x * 0.42f, 0.17f, 0f), new Vector3(0.045f, 0.08f, 0.16f), dark, root.transform);
+            if (stock)
+            {
+                CreatePart("StockArm", new Vector3(-receiverScale.x * 0.67f, -0.015f, 0f), new Vector3(receiverScale.x * 0.34f, 0.08f, 0.11f), dark, root.transform);
+                CreatePart("StockPad", new Vector3(-receiverScale.x * 0.88f, -0.015f, 0f), new Vector3(0.12f, 0.28f, 0.15f), shell, root.transform);
+            }
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + name + ".prefab");
             Object.DestroyImmediate(root);
             return prefab;
@@ -128,13 +145,24 @@ namespace Web3Fps.GameFoundation.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = FormalContentCatalog.LobbySceneName;
             var root = new GameObject("=== ASH LEDGER // ORBITAL ARCHIVE ===").transform;
-            CreateCamera("Main Camera", new Vector3(0f, 2.8f, -10f), new Vector3(8f, 0f, 0f), new Color(0.012f, 0.018f, 0.022f), root);
-            CreateLight("Key Light", new Vector3(45f, -30f, 0f), 1.5f, root);
+            ConfigureAtmosphere(new Color(0.008f, 0.014f, 0.02f), 0.008f);
+            CreateCamera("Main Camera", new Vector3(0f, 2.8f, -11.5f), new Vector3(7f, 0f, 0f), new Color(0.008f, 0.014f, 0.02f), root);
+            CreateLight("Orbital Key", new Vector3(42f, -32f, 0f), 1.65f, root);
+            CreateBackdrop("Broken Ring Vista", new Vector3(0f, 4.4f, 10.5f), new Vector3(23f, 12.8f, 1f), new Vector3(0f, 180f, 0f), palette["backdrop"], root);
 
             CreatePart("ArchiveDeck", new Vector3(0f, -0.3f, 1f), new Vector3(18f, 0.4f, 11f), palette["graphite"], root);
-            CreatePart("RearBulkhead", new Vector3(0f, 3.6f, 5.8f), new Vector3(18f, 7.5f, 0.35f), palette["slate"], root);
+            CreatePart("LeftArchivePylon", new Vector3(-8.3f, 3.3f, 5.5f), new Vector3(1.1f, 7.2f, 1.7f), palette["slate"], root);
+            CreatePart("RightArchivePylon", new Vector3(8.3f, 3.3f, 5.5f), new Vector3(1.1f, 7.2f, 1.7f), palette["slate"], root);
+            CreatePart("OverheadTruss", new Vector3(0f, 7f, 5.5f), new Vector3(17.5f, 0.45f, 1.25f), palette["bone"], root);
             for (var i = -4; i <= 4; i++)
-                CreatePart("LightRib_" + i, new Vector3(i * 2f, 3.5f, 5.55f), new Vector3(0.045f, 6.6f, 0.08f), i % 2 == 0 ? palette["copper"] : palette["bone"], root);
+            {
+                CreatePart("DeckRib_" + i, new Vector3(i * 2f, -0.04f, 1f), new Vector3(0.04f, 0.05f, 10.5f), palette["copper"], root);
+                CreatePart("TrussLight_" + i, new Vector3(i * 1.85f, 6.7f, 4.85f), new Vector3(0.72f, 0.08f, 0.08f), palette["warmGlow"], root);
+            }
+            CreatePart("CobaltStageLine", new Vector3(-3.5f, -0.03f, -1.5f), new Vector3(5.5f, 0.04f, 0.08f), palette["cobaltGlow"], root);
+            CreatePart("AuroraStageLine", new Vector3(3.5f, -0.03f, -1.5f), new Vector3(5.5f, 0.04f, 0.08f), palette["aurora"], root);
+            CreatePointLight("Operator Rim", new Vector3(4.6f, 4.3f, -0.5f), new Color(0.33f, 0.68f, 1f), 5.5f, 11f, root);
+            CreatePointLight("Archive Warm Light", new Vector3(-5f, 2.2f, 2f), new Color(1f, 0.38f, 0.15f), 3.2f, 9f, root);
 
             var operatorRoot = new GameObject("ArchiveOperator").transform;
             operatorRoot.SetParent(root);
@@ -142,14 +170,14 @@ namespace Web3Fps.GameFoundation.Editor
             CreatePrimitive("Body", PrimitiveType.Capsule, new Vector3(0f, 1.15f, 0f), new Vector3(0.72f, 1.15f, 0.48f), palette["bone"], operatorRoot);
             CreatePrimitive("Helmet", PrimitiveType.Sphere, new Vector3(0f, 2.35f, 0f), new Vector3(0.62f, 0.52f, 0.58f), palette["graphite"], operatorRoot);
             CreatePart("Visor", new Vector3(0f, 2.38f, -0.48f), new Vector3(0.48f, 0.13f, 0.04f), palette["aurora"], operatorRoot);
-            var heldWeapon = (GameObject)PrefabUtility.InstantiatePrefab(weapons[0], operatorRoot);
+            var heldWeapon = Object.Instantiate(weapons[0], operatorRoot);
             heldWeapon.name = "KESTREL-7 // Equipped";
             heldWeapon.transform.localPosition = new Vector3(-0.35f, 1.25f, -0.7f);
             heldWeapon.transform.localRotation = Quaternion.Euler(0f, -90f, -8f);
 
             for (var i = 0; i < weapons.Count; i++)
             {
-                var display = (GameObject)PrefabUtility.InstantiatePrefab(weapons[i], root);
+                var display = Object.Instantiate(weapons[i], root);
                 display.name += " // Archive Display";
                 display.transform.position = new Vector3(6.2f, 0.45f + i * 1.15f, 3.5f);
                 display.transform.rotation = Quaternion.Euler(0f, 18f, 0f);
@@ -167,8 +195,7 @@ namespace Web3Fps.GameFoundation.Editor
             var view = systems.AddComponent<FormalLobbyView>();
             view.Configure(lobby, document, FormalContentCatalog.RiftRelaySceneName);
 
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, LobbyScene);
+            SaveGeneratedScene(scene, LobbyScene);
         }
 
         private static void CreateRiftRelayScene(
@@ -179,8 +206,8 @@ namespace Web3Fps.GameFoundation.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = FormalContentCatalog.RiftRelaySceneName;
             var root = new GameObject("=== RIFT RELAY // COMBAT DECK 07 ===").transform;
+            ConfigureAtmosphere(new Color(0.02f, 0.028f, 0.038f), 0.006f);
             CreateLight("Orbital Sun", new Vector3(52f, -28f, 0f), 1.35f, root);
-            RenderSettings.ambientLight = new Color(0.16f, 0.19f, 0.21f);
             CreateRelayArena(root, palette);
 
             var spawnRoot = new GameObject("SpawnPoints").transform;
@@ -206,7 +233,7 @@ namespace Web3Fps.GameFoundation.Editor
             camera.backgroundColor = new Color(0.025f, 0.035f, 0.045f);
             playerParticipant.Configure("local-player", "Cobalt", "cobalt", playerSpawn, new MonoBehaviour[] { playerMotor, playerLook, playerInput });
 
-            var held = (GameObject)PrefabUtility.InstantiatePrefab(viewWeapon, aimSource);
+            var held = Object.Instantiate(viewWeapon, aimSource);
             held.name = "KESTREL-7 // View Model";
             held.transform.localPosition = new Vector3(0.42f, -0.31f, 0.78f);
             held.transform.localRotation = Quaternion.Euler(2f, 2f, 0f);
@@ -228,25 +255,68 @@ namespace Web3Fps.GameFoundation.Editor
             var hud = systems.AddComponent<FormalCombatHud>();
             hud.Configure(document, match, playerParticipant);
 
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, RelayScene);
+            SaveGeneratedScene(scene, RelayScene);
         }
 
         private static void CreateRelayArena(Transform root, IReadOnlyDictionary<string, Material> palette)
         {
             var arena = new GameObject("RiftRelayGeometry").transform;
             arena.SetParent(root);
-            CreatePart("Deck", new Vector3(0f, -0.5f, 0f), new Vector3(48f, 1f, 32f), palette["graphite"], arena);
-            CreatePart("NorthBulkhead", new Vector3(0f, 2.5f, 16f), new Vector3(48f, 5f, 0.7f), palette["slate"], arena);
-            CreatePart("SouthBulkhead", new Vector3(0f, 2.5f, -16f), new Vector3(48f, 5f, 0.7f), palette["slate"], arena);
-            CreatePart("WestBulkhead", new Vector3(-24f, 2.5f, 0f), new Vector3(0.7f, 5f, 32f), palette["slate"], arena);
-            CreatePart("EastBulkhead", new Vector3(24f, 2.5f, 0f), new Vector3(0.7f, 5f, 32f), palette["slate"], arena);
+            var vista = new GameObject("OrbitalVista").transform;
+            vista.SetParent(root);
+            CreateBackdrop("NorthVista", new Vector3(0f, 17f, 49f), new Vector3(88f, 49f, 1f), new Vector3(0f, 180f, 0f), palette["backdrop"], vista);
+            CreateBackdrop("SouthVista", new Vector3(0f, 17f, -49f), new Vector3(88f, 49f, 1f), Vector3.zero, palette["backdrop"], vista);
+            CreateBackdrop("EastVista", new Vector3(62f, 17f, 0f), new Vector3(88f, 49f, 1f), new Vector3(0f, -90f, 0f), palette["backdrop"], vista);
+            CreateBackdrop("WestVista", new Vector3(-62f, 17f, 0f), new Vector3(88f, 49f, 1f), new Vector3(0f, 90f, 0f), palette["backdrop"], vista);
 
-            CreatePart("RelayCore", new Vector3(0f, 3f, 0f), new Vector3(2.5f, 6f, 2.5f), palette["copper"], arena);
-            CreatePart("RelayHaloA", new Vector3(0f, 5.2f, 0f), new Vector3(7f, 0.18f, 0.32f), palette["aurora"], arena);
-            CreatePart("RelayHaloB", new Vector3(0f, 5.2f, 0f), new Vector3(0.32f, 0.18f, 7f), palette["aurora"], arena);
-            CreatePart("CoolingChannelNorth", new Vector3(0f, 0.03f, 9.8f), new Vector3(39f, 0.08f, 2.4f), palette["cobalt"], arena);
-            CreatePart("CoolingChannelSouth", new Vector3(0f, 0.03f, -9.8f), new Vector3(39f, 0.08f, 2.4f), palette["coral"], arena);
+            CreatePart("Deck", new Vector3(0f, -0.5f, 0f), new Vector3(48f, 1f, 32f), palette["graphite"], arena);
+            CreatePart("NorthSafetyWall", new Vector3(0f, 0.65f, 15.6f), new Vector3(48f, 1.3f, 0.65f), palette["slate"], arena);
+            CreatePart("SouthSafetyWall", new Vector3(0f, 0.65f, -15.6f), new Vector3(48f, 1.3f, 0.65f), palette["slate"], arena);
+            CreatePart("WestSafetyWall", new Vector3(-23.6f, 0.65f, 0f), new Vector3(0.65f, 1.3f, 32f), palette["slate"], arena);
+            CreatePart("EastSafetyWall", new Vector3(23.6f, 0.65f, 0f), new Vector3(0.65f, 1.3f, 32f), palette["slate"], arena);
+            CreateInvisibleBlocker("NorthBlocker", new Vector3(0f, 3f, 16.1f), new Vector3(49f, 6f, 0.5f), arena);
+            CreateInvisibleBlocker("SouthBlocker", new Vector3(0f, 3f, -16.1f), new Vector3(49f, 6f, 0.5f), arena);
+            CreateInvisibleBlocker("WestBlocker", new Vector3(-24.1f, 3f, 0f), new Vector3(0.5f, 6f, 33f), arena);
+            CreateInvisibleBlocker("EastBlocker", new Vector3(24.1f, 3f, 0f), new Vector3(0.5f, 6f, 33f), arena);
+
+            for (var x = -20; x <= 20; x += 4)
+            {
+                CreatePart("DeckSeamNorth_" + x, new Vector3(x, 0.015f, 5.35f), new Vector3(0.035f, 0.025f, 9.8f), palette["slate"], arena);
+                CreatePart("DeckSeamSouth_" + x, new Vector3(x, 0.015f, -5.35f), new Vector3(0.035f, 0.025f, 9.8f), palette["slate"], arena);
+            }
+            CreatePart("CobaltLaneLight", new Vector3(0f, 0.035f, 10.2f), new Vector3(39f, 0.045f, 0.16f), palette["cobaltGlow"], arena);
+            CreatePart("CoralLaneLight", new Vector3(0f, 0.035f, -10.2f), new Vector3(39f, 0.045f, 0.16f), palette["coralGlow"], arena);
+            CreatePart("CenterLaneLightA", new Vector3(-12f, 0.035f, 0f), new Vector3(8f, 0.045f, 0.1f), palette["aurora"], arena);
+            CreatePart("CenterLaneLightB", new Vector3(12f, 0.035f, 0f), new Vector3(8f, 0.045f, 0.1f), palette["aurora"], arena);
+
+            var relay = new GameObject("CentralProofRelay").transform;
+            relay.SetParent(arena);
+            CreatePrimitive("RelayPlinth", PrimitiveType.Cylinder, new Vector3(0f, 0.35f, 0f), new Vector3(3.5f, 0.35f, 3.5f), palette["slate"], relay);
+            CreatePrimitive("RelayCore", PrimitiveType.Cylinder, new Vector3(0f, 3.1f, 0f), new Vector3(1.15f, 3.1f, 1.15f), palette["bone"], relay);
+            CreatePrimitive("DataSpine", PrimitiveType.Cylinder, new Vector3(0f, 4.4f, 0f), new Vector3(0.38f, 4.4f, 0.38f), palette["aurora"], relay);
+            for (var i = 0; i < 4; i++)
+            {
+                var angle = i * 90f;
+                var radians = angle * Mathf.Deg2Rad;
+                var p = new Vector3(Mathf.Cos(radians) * 2.5f, 2.3f, Mathf.Sin(radians) * 2.5f);
+                CreatePart("RelayFin_" + i, p, new Vector3(0.3f, 3.8f, 1.3f), palette["copper"], relay, new Vector3(0f, -angle, 0f));
+            }
+            CreatePart("RelayHaloA", new Vector3(0f, 6.5f, 0f), new Vector3(8f, 0.12f, 0.26f), palette["aurora"], relay);
+            CreatePart("RelayHaloB", new Vector3(0f, 6.5f, 0f), new Vector3(0.26f, 0.12f, 8f), palette["aurora"], relay);
+            CreatePointLight("RelayGlow", new Vector3(0f, 5.2f, 0f), new Color(0.2f, 1f, 0.72f), 6.5f, 16f, relay);
+
+            CreateExteriorTower("NorthWestArchive", new Vector3(-18f, 0f, 18f), 9f, palette, arena);
+            CreateExteriorTower("NorthEastArchive", new Vector3(18f, 0f, 18f), 12f, palette, arena);
+            CreateExteriorTower("SouthWestArchive", new Vector3(-18f, 0f, -18f), 11f, palette, arena);
+            CreateExteriorTower("SouthEastArchive", new Vector3(18f, 0f, -18f), 8f, palette, arena);
+
+            for (var x = -18; x <= 18; x += 6)
+            {
+                CreatePart("NorthRailPost_" + x, new Vector3(x, 1.65f, 15.25f), new Vector3(0.12f, 2f, 0.12f), palette["bone"], arena);
+                CreatePart("SouthRailPost_" + x, new Vector3(x, 1.65f, -15.25f), new Vector3(0.12f, 2f, 0.12f), palette["bone"], arena);
+            }
+            CreatePart("NorthRail", new Vector3(0f, 2.2f, 15.25f), new Vector3(42f, 0.1f, 0.1f), palette["copper"], arena);
+            CreatePart("SouthRail", new Vector3(0f, 2.2f, -15.25f), new Vector3(42f, 0.1f, 0.1f), palette["copper"], arena);
 
             var covers = new[]
             {
@@ -256,7 +326,14 @@ namespace Web3Fps.GameFoundation.Editor
                 new Vector3(12f, 1f, 4.5f), new Vector3(12f, 1f, -4.5f)
             };
             for (var i = 0; i < covers.Length; i++)
-                CreatePart("Cover_" + i.ToString("00"), covers[i], new Vector3(3f, 2f, 1.2f), i < 4 ? palette["cobalt"] : palette["coral"], arena);
+            {
+                CreatePart("CoverShell_" + i.ToString("00"), covers[i], new Vector3(3f, 2f, 1.2f), palette["bone"], arena);
+                var accent = i % 2 == 0 ? palette["cobaltGlow"] : palette["coralGlow"];
+                CreatePart("CoverSignal_" + i.ToString("00"), covers[i] + new Vector3(0f, 0.72f, -0.62f), new Vector3(2.2f, 0.14f, 0.04f), accent, arena);
+            }
+
+            CreatePointLight("NorthWorkLight", new Vector3(-13f, 4.2f, 12.5f), new Color(0.28f, 0.58f, 1f), 4.2f, 12f, arena);
+            CreatePointLight("SouthWorkLight", new Vector3(13f, 4.2f, -12.5f), new Color(1f, 0.31f, 0.16f), 4.2f, 12f, arena);
         }
 
         private static Camera CreateCamera(string name, Vector3 position, Vector3 euler, Color background, Transform parent)
@@ -272,6 +349,81 @@ namespace Web3Fps.GameFoundation.Editor
             camera.fieldOfView = 52f;
             go.AddComponent<AudioListener>();
             return camera;
+        }
+
+        private static void ConfigureAtmosphere(Color fogColor, float density)
+        {
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.105f, 0.13f, 0.16f);
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogColor = fogColor;
+            RenderSettings.fogDensity = density;
+        }
+
+        private static void CreateBackdrop(
+            string name,
+            Vector3 position,
+            Vector3 scale,
+            Vector3 euler,
+            Material material,
+            Transform parent)
+        {
+            var backdrop = CreatePrimitive(name, PrimitiveType.Quad, position, scale, material, parent, euler);
+            var collider = backdrop.GetComponent<Collider>();
+            if (collider != null) Object.DestroyImmediate(collider);
+            var renderer = backdrop.GetComponent<Renderer>();
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.lightProbeUsage = LightProbeUsage.Off;
+            renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+        }
+
+        private static void CreatePointLight(
+            string name,
+            Vector3 position,
+            Color color,
+            float intensity,
+            float range,
+            Transform parent)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = position;
+            var light = go.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = color;
+            light.intensity = intensity;
+            light.range = range;
+            light.shadows = LightShadows.Soft;
+        }
+
+        private static void CreateExteriorTower(
+            string name,
+            Vector3 position,
+            float height,
+            IReadOnlyDictionary<string, Material> palette,
+            Transform parent)
+        {
+            var tower = new GameObject(name).transform;
+            tower.SetParent(parent, false);
+            tower.localPosition = position;
+            CreatePart("StructuralCore", new Vector3(0f, height * 0.5f, 0f), new Vector3(4.6f, height, 4.6f), palette["slate"], tower);
+            CreatePart("CeramicCrown", new Vector3(0f, height + 0.8f, 0f), new Vector3(5.6f, 1.7f, 5.6f), palette["bone"], tower);
+            CreatePart("ServiceBandA", new Vector3(0f, height * 0.35f, -2.36f), new Vector3(3.4f, 0.16f, 0.08f), palette["warmGlow"], tower);
+            CreatePart("ServiceBandB", new Vector3(0f, height * 0.68f, -2.36f), new Vector3(3.4f, 0.16f, 0.08f), palette["warmGlow"], tower);
+            CreatePrimitive("ArchiveAntenna", PrimitiveType.Cylinder, new Vector3(0f, height + 3f, 0f), new Vector3(0.22f, 2.2f, 0.22f), palette["copper"], tower);
+            CreatePart("AntennaSignal", new Vector3(0f, height + 5.1f, 0f), new Vector3(0.5f, 0.12f, 0.5f), palette["aurora"], tower);
+        }
+
+        private static void CreateInvisibleBlocker(string name, Vector3 position, Vector3 scale, Transform parent)
+        {
+            var blocker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blocker.name = name;
+            blocker.transform.SetParent(parent, false);
+            blocker.transform.localPosition = position;
+            blocker.transform.localScale = scale;
+            blocker.GetComponent<Renderer>().enabled = false;
         }
 
         private static void CreateLight(string name, Vector3 euler, float intensity, Transform parent)
@@ -321,6 +473,39 @@ namespace Web3Fps.GameFoundation.Editor
             if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smoothness);
             AssetDatabase.CreateAsset(material, Materials + "/" + name + ".mat");
             return material;
+        }
+
+        private static Material CreateEmissiveMaterial(string name, Color color, float intensity)
+        {
+            var material = CreateMaterial(name, color, 0.35f);
+            if (material.HasProperty("_EmissionColor"))
+            {
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", color * intensity);
+                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+            return material;
+        }
+
+        private static Material CreateBackdropMaterial()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Unlit") ??
+                         Shader.Find("Unlit/Texture") ??
+                         Shader.Find("Standard");
+            var material = new Material(shader) { color = Color.white };
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropTexture);
+            if (texture == null) throw new InvalidOperationException("Missing formal backdrop texture: " + BackdropTexture);
+            if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
+            if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+            AssetDatabase.CreateAsset(material, Materials + "/OrbitalVista.mat");
+            return material;
+        }
+
+        private static void SaveGeneratedScene(Scene scene, string path)
+        {
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene, path))
+                throw new InvalidOperationException("Could not save generated scene: " + path);
         }
 
         private static void EnsureFolder(string path)
