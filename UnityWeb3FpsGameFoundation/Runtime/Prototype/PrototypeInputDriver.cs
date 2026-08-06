@@ -62,6 +62,8 @@ namespace Web3Fps.GameFoundation.Prototype
             if (participant == null || participant.Health == null || participant.Health.IsDead ||
                 match == null || !match.IsRunning) return;
 
+            if (Input.GetKeyDown(KeyCode.R) && weapon != null) weapon.TryReload();
+
             var frame = new PlayerInputFrame
             {
                 Move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")),

@@ -12,9 +12,10 @@ The command creates:
 - a UI Toolkit lobby connected to the mock NFT, wallet, reward and tournament services;
 - an editable RIFT RELAY arena blockout;
 - KESTREL-7, PULSE-9 and RELAY-3 blockout prefabs;
-- a combat-only HUD with no wallet, token or chain status;
+- a combat-only HUD with live magazine/reserve ammo, reload state and hit feedback, with no wallet, token or chain status;
+- visual-only player and bot tracers that do not participate in authoritative damage;
 - Build Settings entries for both scenes.
 
-Controls: WASD move, Shift sprint, Space jump, mouse aim, left mouse fire, Escape unlock/lock cursor, R restart after the result.
+Controls: WASD move, Shift sprint, Space jump, mouse aim, left mouse fire, R reload, Escape unlock/lock cursor, and R restart after the result.
 
 This is the first production vertical slice, not final character art, animation, audio, networking or a production backend. NFT finishes are presentation-only and never change weapon statistics.

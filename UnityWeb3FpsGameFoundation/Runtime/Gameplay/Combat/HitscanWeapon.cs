@@ -11,14 +11,48 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
         [SerializeField, Min(0.1f)] private float damage = 25f;
         [SerializeField, Min(1f)] private float range = 150f;
         [SerializeField, Min(0.1f)] private float roundsPerSecond = 10f;
+        [SerializeField, Min(1)] private int magazineCapacity = 30;
+        [SerializeField, Min(0)] private int startingReserveAmmo = 120;
+        [SerializeField, Min(0.1f)] private float reloadDuration = 1.65f;
 
         private IShotCommandSink _sink;
+        private WeaponAmmoState _ammo;
         private double _nextLocalShotAt;
+        private double _reloadCompleteAt;
         private uint _sequence;
 
         public event Action<ShotResult> ShotResolved;
+        public event Action AmmoChanged;
+        public event Action ReloadStarted;
+        public event Action ReloadCompleted;
 
-        private void Awake() => ResolveSink();
+        public int MagazineAmmo => _ammo == null ? magazineCapacity : _ammo.Magazine;
+        public int MagazineCapacity => _ammo == null ? magazineCapacity : _ammo.MagazineCapacity;
+        public int ReserveAmmo => _ammo == null ? startingReserveAmmo : _ammo.Reserve;
+        public bool IsReloading => _ammo != null && _ammo.IsReloading;
+        public float ReloadProgress => !IsReloading || reloadDuration <= 0f
+            ? 0f
+            : Mathf.Clamp01(1f - (float)((_reloadCompleteAt - Time.timeAsDouble) / reloadDuration));
+
+        private void Awake()
+        {
+            ResolveSink();
+            InitializeAmmo();
+        }
+
+        private void Update()
+        {
+            if (!IsReloading || Time.timeAsDouble < _reloadCompleteAt) return;
+            _ammo.CompleteReload();
+            AmmoChanged?.Invoke();
+            ReloadCompleted?.Invoke();
+        }
+
+        private void OnDisable()
+        {
+            if (_ammo == null) return;
+            _ammo.CancelReload();
+        }
 
         public void Configure(string playerId, Transform muzzleTransform, MonoBehaviour commandSink)
         {
@@ -26,6 +60,15 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
             muzzle = muzzleTransform;
             shotSink = commandSink;
             ResolveSink();
+        }
+
+        public void ConfigureAmmo(int capacity, int reserve, float durationSeconds)
+        {
+            magazineCapacity = Mathf.Max(1, capacity);
+            startingReserveAmmo = Mathf.Max(0, reserve);
+            reloadDuration = Mathf.Max(0.1f, durationSeconds);
+            InitializeAmmo();
+            AmmoChanged?.Invoke();
         }
 
         private void ResolveSink()
@@ -36,7 +79,8 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
 
         public bool TryFire(Vector3 aimDirection)
         {
-            if (_sink == null || muzzle == null || Time.timeAsDouble < _nextLocalShotAt) return false;
+            InitializeAmmo();
+            if (_sink == null || muzzle == null || !_ammo.CanFire || Time.timeAsDouble < _nextLocalShotAt) return false;
             _nextLocalShotAt = Time.timeAsDouble + 1d / roundsPerSecond;
             var result = _sink.Submit(new ShotCommand
             {
@@ -49,8 +93,35 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
                 Damage = damage,
                 Range = range
             });
+            if (result.Accepted)
+            {
+                _ammo.ConsumeRound();
+                AmmoChanged?.Invoke();
+            }
             ShotResolved?.Invoke(result);
             return result.Accepted;
+        }
+
+        public bool TryReload()
+        {
+            InitializeAmmo();
+            if (!_ammo.BeginReload()) return false;
+            _reloadCompleteAt = Time.timeAsDouble + reloadDuration;
+            ReloadStarted?.Invoke();
+            AmmoChanged?.Invoke();
+            return true;
+        }
+
+        public void RefillAmmo()
+        {
+            _ammo = new WeaponAmmoState(magazineCapacity, startingReserveAmmo);
+            _reloadCompleteAt = 0d;
+            AmmoChanged?.Invoke();
+        }
+
+        private void InitializeAmmo()
+        {
+            if (_ammo == null) _ammo = new WeaponAmmoState(magazineCapacity, startingReserveAmmo);
         }
     }
 }

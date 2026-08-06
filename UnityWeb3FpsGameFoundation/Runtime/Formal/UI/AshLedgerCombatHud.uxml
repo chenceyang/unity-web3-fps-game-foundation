@@ -6,13 +6,33 @@
             <ui:Label name="timer-label" text="03:00" class="timer" />
             <ui:Label text="RIFT RELAY" class="map" />
         </ui:VisualElement>
-        <ui:Label text="+" class="crosshair" />
+        <ui:VisualElement class="reticle">
+            <ui:VisualElement class="reticle-line reticle-top" />
+            <ui:VisualElement class="reticle-line reticle-bottom" />
+            <ui:VisualElement class="reticle-line reticle-left" />
+            <ui:VisualElement class="reticle-line reticle-right" />
+            <ui:Label name="hit-marker" text="×" class="hit-marker" />
+        </ui:VisualElement>
         <ui:VisualElement class="health-panel">
             <ui:Label text="VITAL" class="micro" />
             <ui:Label name="health-label" text="100" class="health-number" />
             <ui:VisualElement class="health-track"><ui:VisualElement name="health-fill" class="health-fill" /></ui:VisualElement>
         </ui:VisualElement>
-        <ui:Label text="WASD MOVE   //   SHIFT SPRINT   //   SPACE JUMP   //   LMB FIRE   //   ESC CURSOR" class="controls" />
+        <ui:VisualElement class="weapon-panel">
+            <ui:Label text="PRIMARY // AUTO" class="micro" />
+            <ui:Label text="KESTREL-7" class="weapon-name" />
+            <ui:VisualElement class="ammo-row">
+                <ui:Label name="ammo-label" text="30" class="ammo-number" />
+                <ui:Label name="reserve-label" text="/ 120" class="reserve-number" />
+            </ui:VisualElement>
+            <ui:Label name="reload-label" text="R // RELOAD" class="reload-label" />
+        </ui:VisualElement>
+        <ui:VisualElement class="quickbar">
+            <ui:VisualElement class="quickslot quickslot-active"><ui:Label text="1" class="slot-key" /><ui:Label text="KESTREL-7" class="slot-name" /></ui:VisualElement>
+            <ui:VisualElement class="quickslot"><ui:Label text="2" class="slot-key" /><ui:Label text="PULSE-9" class="slot-name" /></ui:VisualElement>
+            <ui:VisualElement class="quickslot"><ui:Label text="3" class="slot-key" /><ui:Label text="RELAY-3" class="slot-name" /></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label text="WASD MOVE   //   SHIFT SPRINT   //   SPACE JUMP   //   LMB FIRE   //   R RELOAD   //   ESC CURSOR" class="controls" />
         <ui:VisualElement name="result-panel" class="result-panel">
             <ui:Label name="result-title" text="VICTORY" class="result-title" />
             <ui:Label text="LOCAL RESULT SAVED // PRESS R TO REDEPLOY" class="result-copy" />

@@ -65,6 +65,8 @@ namespace Web3Fps.GameFoundation.Prototype
                 spawnPoint != null ? spawnPoint.rotation : _fallbackSpawnRotation);
             if (_characterController != null) _characterController.enabled = controllerWasEnabled;
             _health.RestoreToFull();
+            var weapon = GetComponent<HitscanWeapon>();
+            if (weapon != null) weapon.RefillAmmo();
             SetControlEnabled(true);
         }
     }

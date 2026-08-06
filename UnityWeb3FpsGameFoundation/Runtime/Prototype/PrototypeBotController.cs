@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Web3Fps.GameFoundation.Gameplay.Combat;
 
@@ -18,6 +19,8 @@ namespace Web3Fps.GameFoundation.Prototype
         private CharacterController _controller;
         private Health _health;
         private double _nextAttackAt;
+
+        public event Action<Vector3, Vector3, bool> ShotResolved;
 
         public void Configure(PrototypeParticipant bot, PrototypeParticipant player)
         {
@@ -63,9 +66,16 @@ namespace Web3Fps.GameFoundation.Prototype
             var direction = target.AimPoint - origin;
             RaycastHit hit;
             if (!Physics.Raycast(origin, direction.normalized, out hit, attackRange, sightMask, QueryTriggerInteraction.Ignore))
+            {
+                ShotResolved?.Invoke(origin, origin + direction.normalized * attackRange, false);
                 return;
+            }
             var hitParticipant = hit.collider.GetComponentInParent<PrototypeParticipant>();
-            if (hitParticipant != target) return;
+            if (hitParticipant != target)
+            {
+                ShotResolved?.Invoke(origin, hit.point, false);
+                return;
+            }
             target.Health.ApplyDamage(new DamageInfo
             {
                 Amount = damage,
@@ -74,6 +84,7 @@ namespace Web3Fps.GameFoundation.Prototype
                 Direction = direction.normalized,
                 ShotSequence = 0
             });
+            ShotResolved?.Invoke(origin, hit.point, true);
         }
     }
 }

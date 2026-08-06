@@ -64,7 +64,7 @@ namespace Web3Fps.GameFoundation.Editor
             var playerPrefab = CreateFormalPlayerPrefab();
             var botPrefab = CreateFormalBotPrefab(palette, weapons[0]);
             var panelSettings = CreatePanelSettings();
-            CreateLobbyScene(palette, weapons, panelSettings);
+            CreateLobbyScene(palette, weapons, botPrefab, panelSettings);
             CreateRiftRelayScene(palette, weapons[0], playerPrefab, botPrefab, panelSettings);
             SetBuildScenes();
 
@@ -166,6 +166,7 @@ namespace Web3Fps.GameFoundation.Editor
 
             look.Configure(view);
             weapon.Configure("local-player", view, shotSink);
+            weapon.ConfigureAmmo(30, 120, 1.65f);
             participant.Configure("local-player", "Cobalt", "cobalt", null, new MonoBehaviour[] { motor, look, input });
             input.Configure(participant, motor, look, weapon, view, null);
             var prefab = PrefabUtility.SaveAsPrefabAsset(source, Prefabs + "/CobaltOperator.prefab");
@@ -222,6 +223,13 @@ namespace Web3Fps.GameFoundation.Editor
             CreateVisualPrimitive("ArchivePack", PrimitiveType.Cube, new Vector3(0f, 1.43f, -0.5f), new Vector3(0.54f, 0.72f, 0.24f), palette["slate"], visual);
             CreateVisualPrimitive("PackBeacon", PrimitiveType.Cylinder, new Vector3(0.28f, 1.98f, -0.48f), new Vector3(0.08f, 0.32f, 0.08f), palette["coralGlow"], visual);
             CreateVisualPrimitive("CoralBand", PrimitiveType.Cube, new Vector3(0f, 1.42f, 0.54f), new Vector3(0.5f, 0.08f, 0.035f), palette["coralGlow"], visual);
+            CreateVisualPrimitive("HelmetCrown", PrimitiveType.Cube, new Vector3(0f, 2.49f, -0.02f), new Vector3(0.32f, 0.08f, 0.42f), palette["copper"], visual);
+            CreateVisualPrimitive("ChestVentLeft", PrimitiveType.Cube, new Vector3(-0.18f, 1.58f, 0.47f), new Vector3(0.06f, 0.18f, 0.035f), palette["coralGlow"], visual);
+            CreateVisualPrimitive("ChestVentRight", PrimitiveType.Cube, new Vector3(0.18f, 1.58f, 0.47f), new Vector3(0.06f, 0.18f, 0.035f), palette["coralGlow"], visual);
+            CreateVisualPrimitive("LeftThighPlate", PrimitiveType.Cube, new Vector3(-0.25f, 0.57f, 0.2f), new Vector3(0.31f, 0.35f, 0.15f), palette["armor"], visual);
+            CreateVisualPrimitive("RightThighPlate", PrimitiveType.Cube, new Vector3(0.25f, 0.57f, 0.2f), new Vector3(0.31f, 0.35f, 0.15f), palette["armor"], visual);
+            CreateVisualPrimitive("LeftBootSole", PrimitiveType.Cube, new Vector3(-0.25f, -0.07f, 0.17f), new Vector3(0.36f, 0.08f, 0.58f), palette["copper"], visual);
+            CreateVisualPrimitive("RightBootSole", PrimitiveType.Cube, new Vector3(0.25f, -0.07f, 0.17f), new Vector3(0.36f, 0.08f, 0.58f), palette["copper"], visual);
 
             var heldWeapon = Object.Instantiate(weaponPrefab, visual);
             heldWeapon.name = "KESTREL-7 // Bot Weapon";
@@ -275,6 +283,7 @@ namespace Web3Fps.GameFoundation.Editor
         private static void CreateLobbyScene(
             IReadOnlyDictionary<string, Material> palette,
             IReadOnlyList<GameObject> weapons,
+            GameObject operatorPrefab,
             PanelSettings panelSettings)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -299,16 +308,13 @@ namespace Web3Fps.GameFoundation.Editor
             CreatePointLight("Operator Rim", new Vector3(4.6f, 4.3f, -0.5f), new Color(0.33f, 0.68f, 1f), 5.5f, 11f, root);
             CreatePointLight("Archive Warm Light", new Vector3(-5f, 2.2f, 2f), new Color(1f, 0.38f, 0.15f), 3.2f, 9f, root);
 
-            var operatorRoot = new GameObject("ArchiveOperator").transform;
-            operatorRoot.SetParent(root);
-            operatorRoot.position = new Vector3(3.6f, 0f, 1.2f);
-            CreatePrimitive("Body", PrimitiveType.Capsule, new Vector3(0f, 1.15f, 0f), new Vector3(0.72f, 1.15f, 0.48f), palette["bone"], operatorRoot);
-            CreatePrimitive("Helmet", PrimitiveType.Sphere, new Vector3(0f, 2.35f, 0f), new Vector3(0.62f, 0.52f, 0.58f), palette["graphite"], operatorRoot);
-            CreatePart("Visor", new Vector3(0f, 2.38f, -0.48f), new Vector3(0.48f, 0.13f, 0.04f), palette["aurora"], operatorRoot);
-            var heldWeapon = Object.Instantiate(weapons[0], operatorRoot);
-            heldWeapon.name = "KESTREL-7 // Equipped";
-            heldWeapon.transform.localPosition = new Vector3(-0.35f, 1.25f, -0.7f);
-            heldWeapon.transform.localRotation = Quaternion.Euler(0f, -90f, -8f);
+            var archiveOperator = (GameObject)PrefabUtility.InstantiatePrefab(operatorPrefab);
+            archiveOperator.name = "ArchiveOperator // Detailed Armor Preview";
+            archiveOperator.transform.SetParent(root);
+            archiveOperator.transform.position = new Vector3(3.6f, 0.08f, 1.2f);
+            archiveOperator.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            archiveOperator.transform.localScale = Vector3.one * 1.08f;
+            foreach (var behaviour in archiveOperator.GetComponents<MonoBehaviour>()) behaviour.enabled = false;
 
             for (var i = 0; i < weapons.Count; i++)
             {
@@ -369,10 +375,13 @@ namespace Web3Fps.GameFoundation.Editor
 
             var held = Object.Instantiate(viewWeapon, aimSource);
             held.name = "KESTREL-7 // View Model";
-            held.transform.localPosition = new Vector3(0.42f, -0.31f, 0.78f);
-            held.transform.localRotation = Quaternion.Euler(2f, 2f, 0f);
+            held.transform.localPosition = new Vector3(0.36f, -0.31f, 0.78f);
+            held.transform.localRotation = Quaternion.Euler(2f, -90f, 0f);
             held.transform.localScale = Vector3.one * 0.72f;
             CreateFirstPersonArms(aimSource, palette);
+            var visualMuzzle = new GameObject("ViewModelMuzzle").transform;
+            visualMuzzle.SetParent(aimSource, false);
+            visualMuzzle.localPosition = new Vector3(0.31f, -0.2f, 1.48f);
 
             var botParticipant = bot.GetComponent<PrototypeParticipant>();
             var botController = bot.GetComponent<PrototypeBotController>();
@@ -388,6 +397,8 @@ namespace Web3Fps.GameFoundation.Editor
             ConfigureDocument(document, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(CombatUxml));
             var hud = systems.AddComponent<FormalCombatHud>();
             hud.Configure(document, match, playerParticipant, panelSettings);
+            var combatFx = systems.AddComponent<FormalCombatFx>();
+            combatFx.Configure(playerWeapon, botController, visualMuzzle, palette["cobaltGlow"], palette["coralGlow"]);
 
             SaveGeneratedScene(scene, RelayScene);
         }
@@ -594,6 +605,13 @@ namespace Web3Fps.GameFoundation.Editor
             CreateVisualPrimitive("LeftGlove", PrimitiveType.Sphere, new Vector3(-0.1f, -0.23f, 0.84f), new Vector3(0.14f, 0.12f, 0.17f), palette["graphite"], rig);
             CreateVisualPrimitive("RightGlove", PrimitiveType.Sphere, new Vector3(0.36f, -0.24f, 0.88f), new Vector3(0.14f, 0.12f, 0.17f), palette["graphite"], rig);
             CreateVisualPrimitive("CobaltWristSignal", PrimitiveType.Cube, new Vector3(0.32f, -0.29f, 0.86f), new Vector3(0.12f, 0.035f, 0.09f), palette["cobaltGlow"], rig);
+            CreateVisualPrimitive("LeftSleeveBand", PrimitiveType.Cube, new Vector3(-0.24f, -0.4f, 0.56f), new Vector3(0.19f, 0.05f, 0.17f), palette["cobalt"], rig, new Vector3(18f, 0f, -10f));
+            CreateVisualPrimitive("RightSleeveBand", PrimitiveType.Cube, new Vector3(0.26f, -0.4f, 0.58f), new Vector3(0.19f, 0.05f, 0.17f), palette["cobalt"], rig, new Vector3(16f, 0f, 10f));
+            for (var finger = 0; finger < 3; finger++)
+            {
+                CreateVisualPrimitive("LeftGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(-0.14f + finger * 0.04f, -0.19f, 0.92f), new Vector3(0.03f, 0.025f, 0.06f), palette["armor"], rig);
+                CreateVisualPrimitive("RightGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(0.32f + finger * 0.04f, -0.2f, 0.96f), new Vector3(0.03f, 0.025f, 0.06f), palette["armor"], rig);
+            }
         }
 
         private static GameObject CreatePart(string name, Vector3 position, Vector3 scale, Material material, Transform parent, Vector3? euler = null)

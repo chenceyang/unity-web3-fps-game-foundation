@@ -2,14 +2,14 @@
 
 状态：首发方向已进入 Gate B 垂直切片制作；可用于概念验证、外包 Brief、UI 原型、地图 Greybox 和武器内容排期。
 
-适用底层：`com.web3fps.game-foundation` 1.4.6。本文只定义游戏表现和内容，不改变现有安全边界：
+适用底层：`com.web3fps.game-foundation` 1.5.0。本文只定义游戏表现和内容，不改变现有安全边界：
 战斗由权威服务器判定；Web3 仅管理所有权、来源、展示、奖励、赛事资金和结果存证；NFT 永不改变战斗数值。
 
 ![ASH//LEDGER 首个垂直切片概念板](Visuals/ash-ledger-concept-board-v1.png)
 
 > 概念板用于统一布局、材质、色彩、地图模块与武器轮廓，不是最终可直接切图的 UI 或生产资产。
 
-## 当前实现映射（v1.4）
+## 当前实现映射（v1.5）
 
 - `Tools > Web3 FPS > Create ASH LEDGER Vertical Slice` 生成两张可编辑场景。
 - `AshLedgerLobby` 已使用 UI Toolkit 实现 PLAY / ARSENAL / VAULT / TOURNAMENTS / PROFILE 导航，并绑定 Mock Web3 状态。
@@ -17,6 +17,8 @@
   加入断裂轨道环境背景、工业塔群、开放式平台、雾效、极光中继柱和阵营导视照明。
 - KESTREL-7、PULSE-9、RELAY-3 已有第一版可编辑轮廓 Prefab；其余三把武器尚未制作。
 - v1.4.2 已有独立 Coral 低多边形装甲角色、持枪装备和 Cobalt 第一人称双臂；完整骨骼动画与最终 FBX 尚未制作。
+- v1.5 已接通 30/120 弹药、R 装填、实时 HUD、命中标记和双方视觉弹道；HUD 借鉴生存 FPS 的低干扰信息层级，但采用 ASH//LEDGER 原创布局和素材。
+- 大厅角色预览已改用完整分层装甲 Prefab；第一人称手套、袖标、护甲与 KESTREL-7 持枪方向得到加强。
 - 当前角色、武器、场景均为灰盒资产；高精度模型、动画、特效、音频、联网和真实后端仍属于后续 Gate。
 
 ## 1. 产品主张

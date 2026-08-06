@@ -16,7 +16,7 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 - FPS 核心：输入帧、CharacterController 移动、第一人称视角、命中指令、权威射线结算、生命值。
 - 可玩本地 Prototype：一键生成玩家/机器人 Prefab、测试竞技场、死亡复活、比分、倒计时、胜负和 HUD。
 - Web3 大厅：一键生成 Mock 场景，展示钱包、confirmed NFT loadout、奖励和赛事操作及安全降级状态。
-- ASH//LEDGER 正式垂直切片：一键生成 UI Toolkit 大厅、RIFT RELAY 地图、正式战斗 HUD 与三把可编辑武器灰盒 Prefab。
+- ASH//LEDGER 正式垂直切片：一键生成 UI Toolkit 大厅、RIFT RELAY 地图、带弹药/装填/命中反馈的战斗 HUD 与三把可编辑武器灰盒 Prefab。
 - 比赛核心：服务器状态机、比分记录、名次生成、固定 MatchResult 数据结构。
 - 服务器边界：开局前 entitlement-check、不可变 loadout 快照、失败默认皮肤和权威对局会话。
 - 存证数据：确定性 JSON、Ethereum `keccak256`、`matchIdKey` 与 `resultHash`。
@@ -71,6 +71,9 @@ Prototype Prefab；v1.4.3 修复 Unity 6 生成场景丢失 PanelSettings 导致
 Play Mode 中运行生成器。
 v1.4.5 进一步修正 Unity 6 在 `UIDocument.OnEnable` 时清空 PanelSettings 的顺序问题，并在生成阶段强制校验引用。
 v1.4.6 不再依赖 UIDocument 自身保存该引用：正式 View 会保存备用 PanelSettings，并在运行时自动恢复 UI。
+v1.5 增加 30/120 弹药、R 键定时装填、实时装填进度、空仓提示和命中标记；玩家及机器人射击会生成短暂视觉弹道与枪口闪光，
+但命中与伤害仍只采用 `IShotCommandSink` 返回的权威 hitscan 结果。HUD 使用原创的低干扰生存 FPS 信息层级，不复制第三方游戏资源。
+大厅角色预览复用完整分层装甲 Prefab，第一人称手臂、手套与枪械姿态也增加了可编辑细节。
 角色与建筑仍是制作级模块资产，并非概念图中的最终高精度模型；背景视觉已作为实际场景资源接入。
 
 ## Web3 大厅
@@ -168,7 +171,7 @@ Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITo
 截至 2026-08-06，v1.0 运行时程序集和测试程序集已在 Unity 6000.3.21f1 编译；纯 C# 审计通过。
 v1.4 新增 ASH//LEDGER 正式垂直切片生成器、内容目录和 UI Toolkit 表现，仍需在 Unity 中生成后记录
 完整 Test Runner 与 Play Mode 实机结果。仓库的静态审计脚本已使用 Unity 6000.3.21f1 自带 Roslyn
-编译 Runtime、Editor 和 Tests 三个程序集，并执行 36 个测试全部通过；
+编译 Runtime、Editor 和 Tests 三个程序集，并执行 39 个测试全部通过；
 该结果不替代 Unity Editor/Test Runner。
 联网和真实后端的端到端验收尚未完成。
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 - 2026-08-07
+
+- Added a 30-round magazine, reserve ammunition, timed reload on R and respawn refill with isolated EditMode coverage.
+- Reworked the combat HUD around a low-interference survival-FPS layout with live ammo, reserve, reload progress, empty-state warning, hit marker and compact loadout strip.
+- Added visual-only player and bot tracers plus muzzle flashes while preserving authoritative hitscan as the sole damage result.
+- Upgraded the generated low-poly operator preview, first-person hands, armor details and view-model alignment; the static audit now passes 39 tests.
+
 ## 1.4.6 - 2026-08-07
 
 - Added a runtime PanelSettings fallback so the UI Toolkit lobby and combat HUD recover when Unity 6 clears UIDocument's scene reference.
