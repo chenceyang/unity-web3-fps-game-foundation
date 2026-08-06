@@ -133,6 +133,7 @@ Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITo
 客户端用系统浏览器完成交易。游戏内展示 `Open / Settled / Cancelled`，金额始终使用十进制字符串表示 wei。
 
 后端扩展契约见 `Documentation/game-backend-extension-openapi.yaml`。
+正式 UI、美术、地图、武器和 Web3 创意方向见 `Documentation/FORMAL_CONTENT_DESIGN.md`。
 
 ## 资产失败策略
 

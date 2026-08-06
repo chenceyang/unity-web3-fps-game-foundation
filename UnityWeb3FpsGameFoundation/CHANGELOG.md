@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1 - 2026-08-06
+
+- Added the formal UI, art direction, launch-map, weapon-content and Web3 creativity specification.
+- Added the ASH//LEDGER vertical-slice concept board for production alignment.
+- Defined the three cosmetic loadout slots and explicit competitive-readability constraints for NFT content.
+
 ## 1.3.0 - 2026-08-06
 
 - Added a dedicated-server entitlement adapter and a validated, default-cosmetic loadout snapshot resolver.

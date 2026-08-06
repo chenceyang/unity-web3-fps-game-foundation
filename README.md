@@ -7,7 +7,8 @@
 - `UnityWeb3FpsGameFoundation/`：唯一可编辑的包源码。
 - `UnityWeb3FpsGameFoundation/README.md`：包安装、接口和集成合同。
 - `UnityWeb3FpsGameFoundation/Documentation/INTEGRATION_CHECKLIST.md`：尚未完成的游戏/服务器接入清单。
-- `outputs/UnityWeb3FpsGameFoundation_v1.3.zip`：由包源码生成的当前分发产物，不是编辑源。
+- `UnityWeb3FpsGameFoundation/Documentation/FORMAL_CONTENT_DESIGN.md`：正式 UI、美术、地图、武器与 Web3 创意的制作规格。
+- `outputs/UnityWeb3FpsGameFoundation_v1.3.1.zip`：由包源码生成的当前分发产物，不是编辑源。
 - `tools/build_game_design_doc.py`：需求文档 DOCX 的可复现生成器。
 - `references/`：带来源和哈希说明的上游只读快照。
 - `work/`：一次性编译审计与 PDF 检查产物，不是项目事实来源。
@@ -26,6 +27,8 @@
   完整 Unity 批处理验证仍被 Licensing Client 阻塞。
 - v1.3 已加入 entitlement-check 适配器、默认外观降级、冻结 loadout 快照、权威对局会话和结果发布去重/重试边界；
   尚未接入具体联网 SDK、真实专用服务器进程和持久化后端队列。
+- v1.3.1 已确定 ASH//LEDGER 正式内容方向，完成 UI、美术、三张地图、六把武器、NFT 外观体系和制作 Gate 规格；
+  当前是设计与概念板交付，尚未等同于正式资源已经制作。
 
 ## 尚未完成
 
