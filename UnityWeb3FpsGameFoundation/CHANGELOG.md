@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 - 2026-08-06
+
+- Added a dedicated-server entitlement adapter and a validated, default-cosmetic loadout snapshot resolver.
+- Added an SDK-neutral authoritative match session that freezes player cosmetics before combat starts.
+- Added a publish-once match result guard: failed attempts remain retryable and conflicting results are rejected.
+- Added the internal entitlement-check OpenAPI contract and EditMode coverage for server boundaries.
+
 ## 1.2.0 - 2026-08-06
 
 - Added a testable lobby session for NFT inventory, loadout, wallet, reward and tournament operations.

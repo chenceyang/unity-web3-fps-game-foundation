@@ -22,6 +22,19 @@
 - [ ] 在 Unity 中生成 Lobby 场景并手工完成 Mock 钱包、领奖和赛事报名流程。
 - [ ] 接入真实登录 session，只在内存中调用 `SetAccessToken`。
 
+## 权威服务器边界 v1.3
+
+- [x] `LoadoutSnapshotResolver` 在开局前核验并冻结每名玩家的外观快照。
+- [x] `HttpEntitlementGateway` 仅提供专用服务器调用的 entitlement-check 适配器，凭据由内存委托注入。
+- [x] 核验失败时整套 loadout 降级默认皮肤，不阻断普通对局。
+- [x] `AuthoritativeMatchSession` 只在快照完成后启动 `MatchCoordinator`，结算结果不可再次修改。
+- [x] `MatchPublishCoordinator` 保证相同结果成功发布一次，失败可重试，并拒绝同 matchId 的冲突结果。
+- [x] OpenAPI 已补充 entitlement-check 请求与快照响应，tokenId 始终声明为字符串。
+- [x] 使用 Unity 6000.3.21f1 引用程序集编译并静态执行 32 个测试全部通过。
+- [ ] 把边界接入选定的联网 SDK 和真实专用服务器进程。
+- [ ] 实现真实后端 entitlement-check、持久化存证队列与监控告警。
+- [ ] 经联网 SDK 广播 resolved skin 快照并完成双客户端端到端验收。
+
 ## 大厅
 
 - [ ] 创建并持久化 `GameFoundationBootstrap`。
@@ -34,9 +47,9 @@
 ## 开局
 
 - [ ] 客户端提交 loadout 意图。
-- [ ] 游戏服务器调用 entitlement-check，不信任客户端。
+- [x] 游戏服务器侧已提供 entitlement-check 调用边界，不信任客户端。
 - [ ] 服务器生成 snapshotId，并向所有客户端下发最终 resolved skin。
-- [ ] 核验失败时改用默认皮肤，不拒绝玩家进入普通对局。
+- [x] 核验失败时改用默认皮肤，不拒绝玩家进入普通对局。
 - [ ] 对局开始后停止全部资产、奖励和赛事轮询。
 
 ## 战斗
@@ -48,8 +61,8 @@
 
 ## 结算
 
-- [ ] 只有服务器调用 `MatchCoordinator.Finish`。
-- [ ] 同一 matchId 只发布一次。
+- [x] 服务器会话封装 `MatchCoordinator.Finish`，并缓存不可变结算结果。
+- [x] `MatchPublishCoordinator` 保证同一 matchId 的同一结果成功发布一次。
 - [ ] 后端保存 canonicalJson 并验证 resultHash。
 - [ ] 存证失败进入异步重试，不阻断赛后页或下一局。
 - [ ] 高价值奖励在反作弊状态 passed 前不得铸造。

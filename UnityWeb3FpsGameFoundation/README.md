@@ -17,7 +17,9 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 - 可玩本地 Prototype：一键生成玩家/机器人 Prefab、测试竞技场、死亡复活、比分、倒计时、胜负和 HUD。
 - Web3 大厅：一键生成 Mock 场景，展示钱包、confirmed NFT loadout、奖励和赛事操作及安全降级状态。
 - 比赛核心：服务器状态机、比分记录、名次生成、固定 MatchResult 数据结构。
+- 服务器边界：开局前 entitlement-check、不可变 loadout 快照、失败默认皮肤和权威对局会话。
 - 存证数据：确定性 JSON、Ethereum `keccak256`、`matchIdKey` 与 `resultHash`。
+- 结果发布：成功一次后去重、失败可重试、同 matchId 冲突结果拒绝。
 - 资产完整性：下载 AssetBundle 后验证链上 `contentHash`，失败返回可降级结果。
 - EditMode 测试：Keccak 官方向量、结果确定性、比赛状态、资产降级和赛事状态。
 
@@ -96,6 +98,16 @@ if (refresh.UsedFallback)
 
 `LocalAuthoritativeShotSink` 只用于离线、Host 或专用服务器场景。生产客户端不能把本地射线结果当作事实。
 
+## 专用服务器开局边界
+
+`AuthoritativeMatchSession` 接收客户端的 loadout 意图，但不会信任它。调用 `StartAsync` 时，服务器先通过
+`LoadoutSnapshotResolver` 核验每名玩家并冻结 `PlayerLoadoutSnapshot`，随后才启动 `MatchCoordinator`。
+后端不可用、NFT 已转出或未确认时只把对应外观降级成默认皮肤，不拒绝玩家进入普通对局。
+
+生产环境使用 `HttpEntitlementGateway` 调用 `/internal/v1/entitlement-check`。service token 必须由专用服务器
+进程的内存委托提供，不能写入 Unity 场景、Prefab、ScriptableObject、日志或版本控制。客户端构建不得实例化该适配器。
+具体联网 SDK 仍需负责把客户端意图送到服务器，并把最终 resolved skin 快照广播给所有客户端。
+
 ## 对局结果与存证
 
 专用服务器使用 `MatchCoordinator` 生成结果，然后：
@@ -105,6 +117,10 @@ MatchResult result = coordinator.Finish(endedAtUnixSeconds);
 MatchAttestationPayload payload = MatchResultHasher.CreatePayload(result);
 await publisher.PublishAsync(payload, ct);
 ```
+
+推荐由 `MatchPublishCoordinator.PublishOnceAsync` 包装 publisher：首次失败会保留可重试状态，成功后相同结果
+不会重复发送，而同一 matchId 的不同 `resultHash` 会被拒绝。该内存协调器不是持久化队列；真实服务器仍需由
+后端提供 durable queue、幂等键和监控告警。
 
 序列化器执行固定 schema 的确定性 JSON：对象字段按字典序写入，玩家按 `playerId` 排序，
 奖励槽按 `slot + playerId` 排序，只使用整数。`Keccak256` 是 Ethereum Keccak padding，不能替换为 SHA3-256。
@@ -132,9 +148,9 @@ Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITo
 审计工程验证 Keccak、比赛结果与服务层；UnityEngine 组件仍需在编辑器中完成最终编译和场景测试。
 
 截至 2026-08-06，v1.0 运行时程序集和测试程序集已在 Unity 6000.3.21f1 编译；纯 C# 审计通过。
-v1.2 新增 Prototype/Web3 Lobby 生成器、`LocalDeathmatchRulesTests` 和 `Web3LobbySessionTests`，仍需重新
+v1.3 新增 Prototype/Web3 Lobby 生成器、权威服务器开局/发布边界及对应 EditMode 测试，仍需重新
 导入 Unity 并记录完整 Test Runner 与 Play Mode 实机结果。仓库的静态审计脚本已使用 Unity
-6000.3.21f1 自带 Roslyn 编译 Runtime、Editor 和 Tests 三个程序集，并执行 24 个测试全部通过；
+6000.3.21f1 自带 Roslyn 编译 Runtime、Editor 和 Tests 三个程序集，并执行 32 个测试全部通过；
 该结果不替代 Unity Editor/Test Runner。
 联网和真实后端的端到端验收尚未完成。
 
@@ -142,7 +158,7 @@ v1.2 新增 Prototype/Web3 Lobby 生成器、`LocalDeathmatchRulesTests` 和 `We
 
 - 生产地图、动画、美术和正式 UI 视觉系统（仅包含生成式 Prototype/Web3 大厅和 IMGUI 调试界面）；
 - 具体联机 SDK 的传输层；
-- 反作弊算法、账号后端和链交易服务；
+- 反作弊算法、账号后端、真实 entitlement 服务、持久化存证队列和链交易服务；
 - 武器/地图/模式数值平衡；
 - NFT 拍卖、ERC-20、开箱、押注或战斗数值加成。
 

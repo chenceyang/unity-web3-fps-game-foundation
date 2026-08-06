@@ -7,7 +7,7 @@
 - `UnityWeb3FpsGameFoundation/`：唯一可编辑的包源码。
 - `UnityWeb3FpsGameFoundation/README.md`：包安装、接口和集成合同。
 - `UnityWeb3FpsGameFoundation/Documentation/INTEGRATION_CHECKLIST.md`：尚未完成的游戏/服务器接入清单。
-- `outputs/UnityWeb3FpsGameFoundation_v1.2.zip`：由包源码生成的当前分发产物，不是编辑源。
+- `outputs/UnityWeb3FpsGameFoundation_v1.3.zip`：由包源码生成的当前分发产物，不是编辑源。
 - `tools/build_game_design_doc.py`：需求文档 DOCX 的可复现生成器。
 - `references/`：带来源和哈希说明的上游只读快照。
 - `work/`：一次性编译审计与 PDF 检查产物，不是项目事实来源。
@@ -20,17 +20,19 @@
 - 已实现 Mock/HTTP 资产网关、钱包/奖励轮询、loadout 校验、赛事交易意图、结果哈希、AssetBundle 内容校验，以及基础移动/射击/伤害组件。
 - v1.1 已加入本地可玩 Prototype 的场景/Prefab 生成器、机器人、复活、比分、倒计时、胜负和 HUD；
   尚待在 Unity `6000.3.21f1` 重新编译并手工完成一局。
-- v1.2 Runtime、Editor 和 Tests 程序集已使用 Unity 6000.3.21f1 的 Roslyn/引用程序集独立编译；
-  v1.2 Web3 Lobby 加入后共有 24 个 EditMode 测试由静态执行器运行并全部通过。
+- v1.3 Runtime、Editor 和 Tests 程序集已使用 Unity 6000.3.21f1 的 Roslyn/引用程序集独立编译；
+  权威服务器边界加入后共有 32 个 EditMode 测试由静态执行器运行并全部通过。
 - v1.2 已加入独立 Web3 Lobby 生成器和状态控制器：Mock NFT loadout、钱包、奖励和赛事流程均有测试；
   完整 Unity 批处理验证仍被 Licensing Client 阻塞。
+- v1.3 已加入 entitlement-check 适配器、默认外观降级、冻结 loadout 快照、权威对局会话和结果发布去重/重试边界；
+  尚未接入具体联网 SDK、真实专用服务器进程和持久化后端队列。
 
 ## 尚未完成
 
 - 正式视觉版大厅、衣柜、钱包、奖励、赛事、市场和赛后 UI；当前只有功能型 IMGUI Web3 Lobby。
 - 生产级玩家 Prefab、正式地图、武器表现和内容资产；生成式本地 Prototype 已有，但尚未实机复验。
-- 具体联网 SDK、权威服务器适配、断线重连与资产 snapshot。
-- 后端 entitlement-check、存证队列、奖励幂等链路及端到端联调。
+- 具体联网 SDK 传输层、断线重连、快照广播和双客户端联调。
+- 真实后端 entitlement-check、持久化存证队列、奖励幂等链路及端到端联调。
 - 需求文档中的 14 项端到端验收；现有测试仅覆盖底层组件。
 
-下一阶段先在 Unity 中实机验收 Prototype 与 Web3 Lobby，再推进“联网 SDK/权威服务器边界 → 真实后端联调 → 端到端验收”。不要把生成器或包成功编译等同于完整游戏已经完成。
+下一阶段先在 Unity 中实机验收 Prototype 与 Web3 Lobby，并选定联网 SDK；随后把现有权威边界接入专用服务器和真实后端，完成双客户端端到端验收。不要把生成器或包成功编译等同于完整游戏已经完成。

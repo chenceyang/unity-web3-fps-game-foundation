@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Web3 FPS Game Backend Extension
-  version: 1.0.0
-  description: Unity 游戏侧新增的赛事、交易状态和对局结果契约。资产/钱包/奖励契约沿用 web3-fps-assets/api/openapi.yaml。
+  version: 1.1.0
+  description: Unity 游戏侧新增的赛事、交易状态、服务器资产核验和对局结果契约。资产/钱包/奖励契约沿用 web3-fps-assets/api/openapi.yaml。
 servers:
   - url: https://api.example.com
 security:
@@ -73,6 +73,24 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/TransactionStatus"}
+  /internal/v1/entitlement-check:
+    post:
+      operationId: resolveMatchLoadout
+      security: [{serviceToken: []}]
+      description: 专用游戏服务器在开局前核验玩家提交的 NFT 意图并冻结本局外观快照。失败时游戏服务器使用默认皮肤继续普通对局。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/LoadoutEntitlementRequest"}
+      responses:
+        "200":
+          description: 已核验并冻结的本局外观快照
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PlayerLoadoutSnapshot"}
+        "400": {description: Invalid request}
+        "401": {description: Invalid dedicated-server credential}
   /internal/v1/matches:
     post:
       operationId: publishMatchResult
@@ -172,3 +190,36 @@ components:
         state: {type: string, enum: [pending, confirmed, failed, expired]}
         txHash: {type: string}
         error: {type: string}
+    LoadoutEntitlementRequest:
+      type: object
+      required: [matchId, playerId, wallet, tokenIdsBySlot]
+      properties:
+        matchId: {type: string, minLength: 1}
+        playerId: {type: string, minLength: 1}
+        wallet: {type: string}
+        tokenIdsBySlot:
+          type: array
+          description: 每个槽位的 NFT tokenId 意图；空字符串表示默认皮肤。tokenId 禁止转换为数字类型。
+          items: {type: string, pattern: "^$|^[0-9]+$"}
+    ResolvedSkinSlot:
+      type: object
+      required: [slot, requestedTokenId, resolvedTokenId, skinDefId, resolution, reason]
+      properties:
+        slot: {type: integer, minimum: 0}
+        requestedTokenId: {type: string, pattern: "^$|^[0-9]+$"}
+        resolvedTokenId: {type: string, pattern: "^$|^[0-9]+$"}
+        skinDefId: {type: integer, minimum: 0}
+        resolution: {type: string, enum: [confirmed, default]}
+        reason: {type: string}
+    PlayerLoadoutSnapshot:
+      type: object
+      required: [snapshotId, matchId, playerId, wallet, createdAt, slots]
+      properties:
+        snapshotId: {type: string, minLength: 1}
+        matchId: {type: string, minLength: 1}
+        playerId: {type: string, minLength: 1}
+        wallet: {type: string}
+        createdAt: {type: integer, format: int64}
+        slots:
+          type: array
+          items: {$ref: "#/components/schemas/ResolvedSkinSlot"}
