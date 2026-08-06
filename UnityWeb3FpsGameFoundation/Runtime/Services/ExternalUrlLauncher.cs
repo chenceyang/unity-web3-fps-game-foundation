@@ -18,4 +18,17 @@ namespace Web3Fps.GameFoundation.Services
             Application.OpenURL(parsed.AbsoluteUri);
         }
     }
+
+    /// <summary>Records mock transaction URLs without opening an external browser.</summary>
+    public sealed class MockExternalUrlLauncher : IExternalUrlLauncher
+    {
+        public string LastOpenedUrl { get; private set; } = string.Empty;
+        public event Action<string> UrlRequested;
+
+        public void Open(string url)
+        {
+            LastOpenedUrl = url ?? string.Empty;
+            UrlRequested?.Invoke(LastOpenedUrl);
+        }
+    }
 }

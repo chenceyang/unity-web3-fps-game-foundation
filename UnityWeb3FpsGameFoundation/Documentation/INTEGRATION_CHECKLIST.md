@@ -11,6 +11,17 @@
 - [ ] 在 Unity 6000.3.21f1 重新编译 v1.1，运行 EditMode 测试并手工完成一局。
 - [ ] 确认生成场景在目标渲染管线和目标输入配置下正常运行。
 
+## Web3 大厅 v1.2
+
+- [x] 提供 Unity 菜单生成独立 Web3 Lobby 场景。
+- [x] `Web3LobbySession` 统一封装资产、loadout、钱包、奖励和赛事操作。
+- [x] Mock 模式不打开真实外部页面，只记录钱包/交易 action URL。
+- [x] UI 只允许 confirmed NFT 装备，并始终保留默认皮肤入口。
+- [x] 资产或赛事异常转为可见状态，不禁用普通游戏。
+- [x] 使用 Unity 6000.3.21f1 引用程序集编译并静态执行 24 个测试全部通过。
+- [ ] 在 Unity 中生成 Lobby 场景并手工完成 Mock 钱包、领奖和赛事报名流程。
+- [ ] 接入真实登录 session，只在内存中调用 `SetAccessToken`。
+
 ## 大厅
 
 - [ ] 创建并持久化 `GameFoundationBootstrap`。

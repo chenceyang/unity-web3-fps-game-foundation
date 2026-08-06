@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0 - 2026-08-06
+
+- Added a testable lobby session for NFT inventory, loadout, wallet, reward and tournament operations.
+- Added a functional IMGUI Web3 lobby and a Unity menu command that generates its mock-backed scene.
+- Added a mock URL recorder so editor demos never open real wallet or transaction pages.
+- Added EditMode coverage for refresh, string token IDs, wallet/reward flow and tournament registration.
+
 ## 1.1.0 - 2026-08-06
 
 - Added a Unity editor command that generates an editable local FPS scene and player/bot prefabs.

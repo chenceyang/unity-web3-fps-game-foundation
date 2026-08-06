@@ -1,6 +1,6 @@
 {
   "name": "com.web3fps.game-foundation",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "displayName": "Web3 FPS Game Foundation",
   "description": "Unity game-side foundation for a server-authoritative FPS with NFT assets, rewards, tournaments and match attestations.",
   "unity": "2022.3",
@@ -24,6 +24,11 @@
       "displayName": "Playable Local Prototype",
       "description": "Instructions for generating the editable offline FPS scene and prefabs.",
       "path": "Samples~/PlayablePrototype"
+    },
+    {
+      "displayName": "Web3 Lobby",
+      "description": "Instructions for generating the mock-backed wallet, NFT, reward and tournament lobby.",
+      "path": "Samples~/Web3Lobby"
     }
   ]
 }
