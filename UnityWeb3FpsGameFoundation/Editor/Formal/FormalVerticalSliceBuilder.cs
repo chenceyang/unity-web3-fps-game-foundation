@@ -225,6 +225,27 @@ namespace Web3Fps.GameFoundation.Editor
             return settings;
         }
 
+        private static void ConfigureDocument(
+            UIDocument document,
+            PanelSettings panelSettings,
+            VisualTreeAsset visualTree)
+        {
+            if (visualTree == null) throw new InvalidOperationException("The generated UI document is missing its UXML asset.");
+            document.enabled = false;
+            document.panelSettings = panelSettings;
+            document.visualTreeAsset = visualTree;
+
+            // Unity 6 can discard PanelSettings when UIDocument is added and configured
+            // in the same editor frame. Persist both references explicitly.
+            var serialized = new SerializedObject(document);
+            serialized.FindProperty("m_PanelSettings").objectReferenceValue = panelSettings;
+            serialized.FindProperty("sourceAsset").objectReferenceValue = visualTree;
+            serialized.FindProperty("m_SortingOrder").floatValue = 20f;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(document);
+            document.enabled = true;
+        }
+
         private static void CreateLobbyScene(
             IReadOnlyDictionary<string, Material> palette,
             IReadOnlyList<GameObject> weapons,
@@ -278,8 +299,7 @@ namespace Web3Fps.GameFoundation.Editor
             var lobby = systems.AddComponent<Web3LobbyController>();
             lobby.Configure(bootstrap);
             var document = systems.AddComponent<UIDocument>();
-            document.panelSettings = panelSettings;
-            document.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(LobbyUxml);
+            ConfigureDocument(document, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(LobbyUxml));
             var view = systems.AddComponent<FormalLobbyView>();
             view.Configure(lobby, document, FormalContentCatalog.RiftRelaySceneName);
 
@@ -339,8 +359,7 @@ namespace Web3Fps.GameFoundation.Editor
             match.Configure(playerParticipant, botParticipant, 7, 300f, 2f, FormalContentCatalog.ModeId, FormalContentCatalog.MapId);
             playerInput.Configure(playerParticipant, playerMotor, playerLook, playerWeapon, aimSource, match);
             var document = systems.AddComponent<UIDocument>();
-            document.panelSettings = panelSettings;
-            document.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(CombatUxml);
+            ConfigureDocument(document, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(CombatUxml));
             var hud = systems.AddComponent<FormalCombatHud>();
             hud.Configure(document, match, playerParticipant);
 
@@ -633,6 +652,8 @@ namespace Web3Fps.GameFoundation.Editor
             if (texture == null) throw new InvalidOperationException("Missing formal backdrop texture: " + BackdropTexture);
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
             if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+            if (material.HasProperty("_Cull")) material.SetInt("_Cull", (int)CullMode.Off);
+            material.doubleSidedGI = true;
             AssetDatabase.CreateAsset(material, Materials + "/OrbitalVista.mat");
             return material;
         }

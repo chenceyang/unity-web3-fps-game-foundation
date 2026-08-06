@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.3 - 2026-08-07
+
+- Fixed Unity 6 dropping the generated UIDocument PanelSettings reference, which prevented the lobby and combat UI from rendering.
+- Persisted UI Toolkit panel, UXML and sorting-order references explicitly in generated scenes.
+- Made the orbital backdrop material double-sided so it remains visible from the gameplay camera.
+
 ## 1.4.2 - 2026-08-06
 
 - Removed the formal scene's dependency on legacy generated Prototype prefabs, preventing missing-script actor instances.
