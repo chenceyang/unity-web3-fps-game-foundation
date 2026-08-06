@@ -236,13 +236,17 @@ namespace Web3Fps.GameFoundation.Editor
 
         private static PanelSettings CreatePanelSettings()
         {
+            const string path = Root + "/AshLedgerPanelSettings.asset";
             var settings = ScriptableObject.CreateInstance<PanelSettings>();
             settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             settings.referenceResolution = new Vector2Int(1920, 1080);
             settings.match = 0.5f;
             settings.sortingOrder = 20;
-            AssetDatabase.CreateAsset(settings, Root + "/AshLedgerPanelSettings.asset");
-            return settings;
+            AssetDatabase.CreateAsset(settings, path);
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+            return AssetDatabase.LoadAssetAtPath<PanelSettings>(path);
         }
 
         private static void ConfigureDocument(
@@ -254,16 +258,21 @@ namespace Web3Fps.GameFoundation.Editor
             document.enabled = false;
             document.panelSettings = panelSettings;
             document.visualTreeAsset = visualTree;
+            document.enabled = true;
 
-            // Unity 6 can discard PanelSettings when UIDocument is added and configured
-            // in the same editor frame. Persist both references explicitly.
+            // Enabling a newly-added UIDocument can clear m_PanelSettings in Unity 6.
+            // Write the serialized references after OnEnable has completed.
             var serialized = new SerializedObject(document);
+            serialized.Update();
             serialized.FindProperty("m_PanelSettings").objectReferenceValue = panelSettings;
             serialized.FindProperty("sourceAsset").objectReferenceValue = visualTree;
             serialized.FindProperty("m_SortingOrder").floatValue = 20f;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(document);
-            document.enabled = true;
+
+            serialized.Update();
+            if (serialized.FindProperty("m_PanelSettings").objectReferenceValue == null)
+                throw new InvalidOperationException("Unity did not persist the generated UI PanelSettings reference.");
         }
 
         private static void CreateLobbyScene(
@@ -498,6 +507,17 @@ namespace Web3Fps.GameFoundation.Editor
             Transform parent)
         {
             var backdrop = CreatePrimitive(name, PrimitiveType.Quad, position, scale, material, parent, euler);
+            ConfigureBackdropRenderer(backdrop);
+
+            // Built-in Unlit/Texture has fixed back-face culling. Add a reverse-facing
+            // plane so the vista works consistently across Built-in, URP and HDRP.
+            var reverseEuler = euler + new Vector3(0f, 180f, 0f);
+            var reverse = CreatePrimitive(name + " Reverse", PrimitiveType.Quad, position, scale, material, parent, reverseEuler);
+            ConfigureBackdropRenderer(reverse);
+        }
+
+        private static void ConfigureBackdropRenderer(GameObject backdrop)
+        {
             var collider = backdrop.GetComponent<Collider>();
             if (collider != null) Object.DestroyImmediate(collider);
             var renderer = backdrop.GetComponent<Renderer>();

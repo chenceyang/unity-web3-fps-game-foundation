@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.5 - 2026-08-07
+
+- Reloads PanelSettings after synchronous asset import and writes the UIDocument reference after Unity 6 OnEnable completes.
+- Adds a generation-time assertion so a lobby with a missing PanelSettings reference can no longer be saved silently.
+- Generates reverse-facing orbital backdrop geometry for pipelines whose unlit shader has fixed back-face culling.
+
 ## 1.4.4 - 2026-08-07
 
 - Selects Built-in, URP or HDRP shaders from the project's active render pipeline instead of installed shader availability.

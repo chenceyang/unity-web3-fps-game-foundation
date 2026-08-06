@@ -69,6 +69,7 @@ KESTREL-7、PULSE-9、RELAY-3 三把武器 Prefab。v1.4.1 进一步加入断裂
 Prototype Prefab；v1.4.3 修复 Unity 6 生成场景丢失 PanelSettings 导致 UI 不显示的问题。所有生成资产都位于项目
 `Assets` 下，可继续编辑。v1.4.4 会根据项目当前的 Built-in / URP / HDRP 渲染管线选择材质 Shader，并禁止在
 Play Mode 中运行生成器。
+v1.4.5 进一步修正 Unity 6 在 `UIDocument.OnEnable` 时清空 PanelSettings 的顺序问题，并在生成阶段强制校验引用。
 角色与建筑仍是制作级模块资产，并非概念图中的最终高精度模型；背景视觉已作为实际场景资源接入。
 
 ## Web3 大厅
