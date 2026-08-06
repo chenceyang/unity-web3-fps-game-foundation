@@ -1,7 +1,15 @@
 using UnityEngine;
+using Web3Fps.GameFoundation.Prototype;
 
 namespace Web3Fps.GameFoundation.Formal
 {
+    public enum FormalRigRecoveryState
+    {
+        Healthy,
+        AnimationDisabled,
+        FallbackActive
+    }
+
     [DisallowMultipleComponent]
     public sealed class FormalCharacterRigGuard : MonoBehaviour
     {
@@ -14,6 +22,11 @@ namespace Web3Fps.GameFoundation.Formal
         private PoseNode[] _restPose;
         private bool _animationDisabled;
         private bool _fallbackActivated;
+        private PrototypeParticipant _participant;
+
+        public FormalRigRecoveryState RecoveryState => _fallbackActivated
+            ? FormalRigRecoveryState.FallbackActive
+            : _animationDisabled ? FormalRigRecoveryState.AnimationDisabled : FormalRigRecoveryState.Healthy;
 
         public void Configure(GameObject skeletalRig, GameObject proceduralFallback, Animator targetAnimator)
         {
@@ -25,6 +38,18 @@ namespace Web3Fps.GameFoundation.Formal
         private void Awake()
         {
             CaptureRestPose();
+            _participant = GetComponentInParent<PrototypeParticipant>();
+        }
+
+        private void OnEnable()
+        {
+            if (_participant == null) _participant = GetComponentInParent<PrototypeParticipant>();
+            if (_participant != null) _participant.Respawned += OnRespawned;
+        }
+
+        private void OnDisable()
+        {
+            if (_participant != null) _participant.Respawned -= OnRespawned;
         }
 
         private void LateUpdate()
@@ -86,6 +111,16 @@ namespace Web3Fps.GameFoundation.Formal
                 node.Transform.localRotation = node.LocalRotation;
                 node.Transform.localScale = node.LocalScale;
             }
+        }
+
+        private void OnRespawned()
+        {
+            RestoreRestPose();
+            if (rigRoot != null) rigRoot.SetActive(true);
+            if (fallbackRoot != null) fallbackRoot.SetActive(false);
+            if (animator != null) animator.enabled = true;
+            _animationDisabled = false;
+            _fallbackActivated = false;
         }
 
         private struct PoseNode

@@ -18,6 +18,7 @@ namespace Web3Fps.GameFoundation.Gameplay
         private float _verticalVelocity;
 
         public Vector3 Velocity => _horizontalVelocity + Vector3.up * _verticalVelocity;
+        public float MovementAmount => sprintSpeed <= 0f ? 0f : Mathf.Clamp01(_horizontalVelocity.magnitude / sprintSpeed);
 
         private void Awake()
         {

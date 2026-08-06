@@ -1,6 +1,6 @@
 {
   "name": "com.web3fps.game-foundation",
-  "version": "1.6.4",
+  "version": "1.7.0",
   "displayName": "Web3 FPS Game Foundation",
   "description": "Unity game-side foundation for a server-authoritative FPS with NFT assets, rewards, tournaments and match attestations.",
   "unity": "2022.3",
@@ -32,7 +32,7 @@
     },
     {
       "displayName": "ASH//LEDGER Vertical Slice",
-      "description": "Generate the functional UI Toolkit lobby, RIFT RELAY combat scene, ammo HUD, tracer FX and editable weapon blockouts.",
+      "description": "Generate the functional lobby and upgraded RIFT RELAY combat slice with skeletal view arms, hit zones, weapon handling and tactical bot AI.",
       "path": "Samples~/FormalVerticalSlice"
     }
   ]

@@ -18,6 +18,8 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
     {
         public bool Accepted;
         public bool Hit;
+        public bool DamageApplied;
+        public float AppliedDamage;
         public Vector3 Point;
         public Vector3 Normal;
         public GameObject HitObject;

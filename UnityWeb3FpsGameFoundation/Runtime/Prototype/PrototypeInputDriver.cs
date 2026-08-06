@@ -78,6 +78,7 @@ namespace Web3Fps.GameFoundation.Prototype
             };
             if (motor != null) motor.SetInput(frame);
             if (look != null) look.SetLookDelta(frame.Look);
+            if (weapon != null) weapon.SetHandlingState(motor == null ? frame.Move.magnitude : motor.MovementAmount, frame.AimHeld);
             if (frame.FireHeld && weapon != null && aimSource != null) weapon.TryFire(aimSource.forward);
         }
     }

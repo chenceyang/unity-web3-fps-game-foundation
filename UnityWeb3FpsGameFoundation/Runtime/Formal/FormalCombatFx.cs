@@ -58,6 +58,7 @@ namespace Web3Fps.GameFoundation.Formal
             if (!result.Accepted || playerVisualMuzzle == null) return;
             SpawnTracer(playerVisualMuzzle.position, result.Point, cobaltTracer, new Color(0.24f, 0.82f, 1f));
             SpawnMuzzleFlash(playerVisualMuzzle.position, new Color(0.3f, 0.82f, 1f));
+            if (result.Hit) SpawnImpact(result.Point, result.Normal, result.DamageApplied);
         }
 
         private void OnBotShot(Vector3 origin, Vector3 end, bool hit)
@@ -98,6 +99,26 @@ namespace Web3Fps.GameFoundation.Formal
             light.intensity = 4.5f;
             light.shadows = LightShadows.None;
             Destroy(flash, 0.045f);
+        }
+
+        private void SpawnImpact(Vector3 position, Vector3 normal, bool damageApplied)
+        {
+            var impact = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            impact.name = damageApplied ? "Damage Impact" : "Surface Impact";
+            impact.transform.SetParent(transform, true);
+            impact.transform.position = position + normal * 0.012f;
+            impact.transform.rotation = Quaternion.LookRotation(normal);
+            impact.transform.localScale = Vector3.one * (damageApplied ? 0.085f : 0.055f);
+            var collider = impact.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            var renderer = impact.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                renderer.sharedMaterial = damageApplied && coralTracer != null ? coralTracer : cobaltTracer;
+            }
+            Destroy(impact, damageApplied ? 0.18f : 0.1f);
         }
     }
 }

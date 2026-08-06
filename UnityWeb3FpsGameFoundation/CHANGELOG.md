@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0 - 2026-08-07
+
+- Added explicit head, torso and leg damage zones, self-hit filtering, spawn protection and damage-only hit confirmation.
+- Added deterministic hip/ADS/movement/bloom spread, surface and damage impacts, while retaining the existing recoil, reload and synthesized audio presentation.
+- Copied embedded FBX motions into independently editable generated animation assets and created a skeletal Cobalt first-person arms mesh with a guarded procedural fallback.
+- Upgraded the Coral bot with sight checks, reaction delay, last-seen memory, preferred range, strafing, bounded aim error and Recruit/Standard/Veteran presets.
+- Rebuilt RIFT RELAY into clearer staggered combat lanes, reduced the non-combat relay silhouette and added readable spawn-side shielding.
+- Exposed skeletal recovery state and re-validates the character rig after respawn; static Runtime/Editor/Test compilation passes 53 tests.
+
 ## 1.6.4 - 2026-08-07
 
 - Fixed the actual moving giant: Generic FBX animation was replaying imported unit/axis transform curves and exploding the Coral skinned hierarchy at runtime.

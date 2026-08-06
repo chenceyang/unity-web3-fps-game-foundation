@@ -9,9 +9,9 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
     /// </summary>
     public sealed class LocalAuthoritativeShotSink : MonoBehaviour, IShotCommandSink
     {
-        [SerializeField] private LayerMask hitMask = ~0;
+        [SerializeField] private LayerMask hitMask = ~(1 << 2); // Ignore actor movement capsules; use explicit hit zones.
         [SerializeField, Min(0.01f)] private float minimumShotInterval = 0.08f;
-        [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Ignore;
+        [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Collide;
 
         private readonly Dictionary<string, double> _lastShotAt = new Dictionary<string, double>();
         private readonly Dictionary<string, uint> _lastSequence = new Dictionary<string, uint>();
@@ -34,7 +34,7 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
             _lastSequence[command.ShooterId] = command.Sequence;
 
             RaycastHit hit;
-            if (!Physics.Raycast(command.Origin, command.Direction.normalized, out hit, command.Range, hitMask, triggerInteraction))
+            if (!TryFindFirstValidHit(command, out hit))
                 return new ShotResult { Accepted = true, Hit = false, Point = command.Origin + command.Direction.normalized * command.Range };
 
             IDamageable damageable = null;
@@ -44,20 +44,43 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
                 damageable = behaviours[i] as IDamageable;
                 if (damageable != null) break;
             }
-            damageable?.ApplyDamage(new DamageInfo
+            var damage = new DamageInfo
             {
                 Amount = command.Damage,
                 Source = command.ShooterObject,
                 Point = hit.point,
                 Direction = command.Direction.normalized,
                 ShotSequence = command.Sequence
-            });
+            };
+            var damageApplied = damageable != null && damageable.ApplyDamage(damage);
+            var zone = hit.collider.GetComponent<DamageZone>();
+            var appliedDamage = zone == null
+                ? command.Damage
+                : DamageZoneMath.ScaleDamage(command.Damage, zone.DamageMultiplier);
 
             return new ShotResult
             {
                 Accepted = true, Hit = true, Point = hit.point, Normal = hit.normal,
-                HitObject = hit.collider.gameObject
+                HitObject = hit.collider.gameObject, DamageApplied = damageApplied,
+                AppliedDamage = damageApplied ? appliedDamage : 0f
             };
+        }
+
+        private bool TryFindFirstValidHit(ShotCommand command, out RaycastHit hit)
+        {
+            var direction = command.Direction.normalized;
+            var hits = Physics.RaycastAll(command.Origin, direction, command.Range, hitMask, triggerInteraction);
+            System.Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
+            for (var i = 0; i < hits.Length; i++)
+            {
+                var candidate = hits[i];
+                if (command.ShooterObject != null &&
+                    candidate.collider.transform.IsChildOf(command.ShooterObject.transform)) continue;
+                hit = candidate;
+                return true;
+            }
+            hit = default;
+            return false;
         }
     }
 }

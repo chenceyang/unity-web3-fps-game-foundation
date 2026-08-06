@@ -24,6 +24,8 @@ namespace Web3Fps.GameFoundation.Editor
         private const string Root = "Assets/AshLedgerVerticalSlice";
         private const string Materials = Root + "/Materials";
         private const string Prefabs = Root + "/Prefabs";
+        private const string Animations = Root + "/Animations";
+        private const string GeneratedMeshes = Root + "/GeneratedMeshes";
         private const string Scenes = Root + "/Scenes";
         private const string LobbyScene = Scenes + "/AshLedgerLobby.unity";
         private const string RelayScene = Scenes + "/RiftRelay.unity";
@@ -60,6 +62,8 @@ namespace Web3Fps.GameFoundation.Editor
             if (AssetDatabase.IsValidFolder(Root)) AssetDatabase.DeleteAsset(Root);
             EnsureFolder(Materials);
             EnsureFolder(Prefabs);
+            EnsureFolder(Animations);
+            EnsureFolder(GeneratedMeshes);
             EnsureFolder(Scenes);
 
             ConfigureCharacterImporter(CobaltCharacterFbx);
@@ -69,7 +73,7 @@ namespace Web3Fps.GameFoundation.Editor
 
             var palette = CreatePalette();
             var weapons = CreateWeaponPrefabs(palette);
-            var playerPrefab = CreateFormalPlayerPrefab();
+            var playerPrefab = CreateFormalPlayerPrefab(palette, cobaltAnimator);
             var botPrefab = CreateFormalBotPrefab(palette, weapons[0], coralAnimator);
             var panelSettings = CreatePanelSettings();
             CreateLobbyScene(palette, weapons, botPrefab, cobaltAnimator, panelSettings);
@@ -148,14 +152,17 @@ namespace Web3Fps.GameFoundation.Editor
             return prefab;
         }
 
-        private static GameObject CreateFormalPlayerPrefab()
+        private static GameObject CreateFormalPlayerPrefab(
+            IReadOnlyDictionary<string, Material> palette,
+            RuntimeAnimatorController animatorController)
         {
             var source = new GameObject("CobaltOperator");
+            source.layer = 2;
             var controller = source.AddComponent<CharacterController>();
             controller.center = Vector3.up;
             controller.height = 2f;
             controller.radius = 0.42f;
-            source.AddComponent<Health>();
+            var health = source.AddComponent<Health>();
             var motor = source.AddComponent<PlayerMotor>();
             var look = source.AddComponent<FirstPersonLook>();
             var shotSink = source.AddComponent<LocalAuthoritativeShotSink>();
@@ -171,6 +178,9 @@ namespace Web3Fps.GameFoundation.Editor
             camera.nearClipPlane = 0.03f;
             view.gameObject.AddComponent<AudioListener>();
             view.gameObject.tag = "MainCamera";
+
+            CreateDamageZones(source.transform, health);
+            CreateFirstPersonSkeletalArms(view, palette, animatorController, weapon);
 
             look.Configure(view);
             weapon.Configure("local-player", view, shotSink);
@@ -188,15 +198,18 @@ namespace Web3Fps.GameFoundation.Editor
             RuntimeAnimatorController animatorController)
         {
             var source = new GameObject("CoralOperator");
+            source.layer = 2;
             var controller = source.AddComponent<CharacterController>();
             controller.center = Vector3.up;
             controller.height = 2f;
             controller.radius = 0.48f;
-            source.AddComponent<Health>();
+            var health = source.AddComponent<Health>();
             var botController = source.AddComponent<PrototypeBotController>();
             var participant = source.AddComponent<PrototypeParticipant>();
             participant.Configure("prototype-bot", "Coral", "coral", null, new MonoBehaviour[] { botController });
             botController.Configure(participant, null);
+            botController.ConfigureDifficulty(PrototypeBotDifficulty.Standard);
+            CreateDamageZones(source.transform, health);
 
             var visual = new GameObject("OperatorVisual").transform;
             visual.SetParent(source.transform, false);
@@ -410,7 +423,6 @@ namespace Web3Fps.GameFoundation.Editor
             held.transform.localPosition = new Vector3(0.3f, -0.38f, 0.86f);
             held.transform.localRotation = Quaternion.Euler(2f, -90f, 0f);
             held.transform.localScale = Vector3.one * 0.5f;
-            CreateFirstPersonArms(aimSource, palette);
             var viewMagazine = FindDescendant(held.transform, "Magazine");
             var weaponPresentation = held.AddComponent<FirstPersonWeaponPresentation>();
             weaponPresentation.Configure(playerWeapon, playerLook, held.transform, viewMagazine);
@@ -472,15 +484,27 @@ namespace Web3Fps.GameFoundation.Editor
             controller.AddParameter("Fire", AnimatorControllerParameterType.Trigger);
             controller.AddParameter("Dead", AnimatorControllerParameterType.Bool);
             var stateMachine = controller.layers[0].stateMachine;
+            var characterId = System.IO.Path.GetFileNameWithoutExtension(fbxPath);
+            var idleClip = CreateIndependentAnimationClip(
+                FindAnimationClip(clips, "Idle") ?? clips[0], characterId + "_Idle", true);
+            var runClip = CreateIndependentAnimationClip(
+                FindAnimationClip(clips, "Run_Carry") ?? FindAnimationClip(clips, "Run") ?? idleClip,
+                characterId + "_RunCarry", true);
+            var shootClip = CreateIndependentAnimationClip(
+                FindAnimationClip(clips, "Shoot_OneHanded") ?? idleClip,
+                characterId + "_Shoot", false);
+            var deathClip = CreateIndependentAnimationClip(
+                FindAnimationClip(clips, "Death") ?? idleClip,
+                characterId + "_Death", false);
             var idle = stateMachine.AddState("Idle");
-            idle.motion = FindAnimationClip(clips, "Idle") ?? clips[0];
+            idle.motion = idleClip;
             stateMachine.defaultState = idle;
             var run = stateMachine.AddState("Run Carry");
-            run.motion = FindAnimationClip(clips, "Run_Carry") ?? FindAnimationClip(clips, "Run") ?? idle.motion;
+            run.motion = runClip;
             var shoot = stateMachine.AddState("Shoot");
-            shoot.motion = FindAnimationClip(clips, "Shoot_OneHanded") ?? idle.motion;
+            shoot.motion = shootClip;
             var death = stateMachine.AddState("Death");
-            death.motion = FindAnimationClip(clips, "Death") ?? idle.motion;
+            death.motion = deathClip;
 
             var toRun = idle.AddTransition(run);
             toRun.hasExitTime = false;
@@ -508,6 +532,23 @@ namespace Web3Fps.GameFoundation.Editor
             respawn.AddCondition(AnimatorConditionMode.IfNot, 0f, "Dead");
             EditorUtility.SetDirty(controller);
             return controller;
+        }
+
+        private static AnimationClip CreateIndependentAnimationClip(AnimationClip source, string assetName, bool loop)
+        {
+            if (source == null) throw new InvalidOperationException("Cannot create an animation clip without a source motion.");
+            var path = Animations + "/" + assetName + ".anim";
+            var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            if (existing != null) return existing;
+            var clip = new AnimationClip { name = assetName };
+            EditorUtility.CopySerialized(source, clip);
+            clip.name = assetName;
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = loop;
+            settings.loopBlend = loop;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+            AssetDatabase.CreateAsset(clip, path);
+            return clip;
         }
 
         private static AnimationClip FindAnimationClip(IEnumerable<AnimationClip> clips, string name)
@@ -631,21 +672,21 @@ namespace Web3Fps.GameFoundation.Editor
             CreatePart("CenterLaneLightA", new Vector3(-12f, 0.035f, 0f), new Vector3(8f, 0.045f, 0.1f), palette["aurora"], arena);
             CreatePart("CenterLaneLightB", new Vector3(12f, 0.035f, 0f), new Vector3(8f, 0.045f, 0.1f), palette["aurora"], arena);
 
-            var relay = new GameObject("CentralProofRelay").transform;
+            var relay = new GameObject("CentralObjectiveRelay // Static Non-Combat").transform;
             relay.SetParent(arena);
-            CreatePrimitive("RelayPlinth", PrimitiveType.Cylinder, new Vector3(0f, 0.25f, 0f), new Vector3(2.4f, 0.25f, 2.4f), palette["slate"], relay);
-            CreatePrimitive("RelayCore", PrimitiveType.Cylinder, new Vector3(0f, 1.6f, 0f), new Vector3(0.7f, 1.6f, 0.7f), palette["bone"], relay);
-            CreatePrimitive("DataSpine", PrimitiveType.Cylinder, new Vector3(0f, 2.5f, 0f), new Vector3(0.18f, 2.5f, 0.18f), palette["aurora"], relay);
+            CreatePrimitive("RelayPlinth", PrimitiveType.Cylinder, new Vector3(0f, 0.18f, 0f), new Vector3(2.05f, 0.18f, 2.05f), palette["slate"], relay);
+            CreatePrimitive("RelayCore", PrimitiveType.Cylinder, new Vector3(0f, 1.05f, 0f), new Vector3(0.62f, 1.05f, 0.62f), palette["bone"], relay);
+            CreatePrimitive("DataSpine", PrimitiveType.Cylinder, new Vector3(0f, 1.75f, 0f), new Vector3(0.13f, 1.55f, 0.13f), palette["aurora"], relay);
             for (var i = 0; i < 4; i++)
             {
                 var angle = i * 90f;
                 var radians = angle * Mathf.Deg2Rad;
-                var p = new Vector3(Mathf.Cos(radians) * 1.65f, 1.3f, Mathf.Sin(radians) * 1.65f);
-                CreatePart("RelayFin_" + i, p, new Vector3(0.18f, 2f, 0.7f), palette["copper"], relay, new Vector3(0f, -angle, 0f));
+                var p = new Vector3(Mathf.Cos(radians) * 1.4f, 0.9f, Mathf.Sin(radians) * 1.4f);
+                CreatePart("RelayFin_" + i, p, new Vector3(0.14f, 1.35f, 0.58f), palette["copper"], relay, new Vector3(0f, -angle, 0f));
             }
-            CreatePart("RelayHaloA", new Vector3(0f, 4f, 0f), new Vector3(4f, 0.08f, 0.16f), palette["aurora"], relay);
-            CreatePart("RelayHaloB", new Vector3(0f, 4f, 0f), new Vector3(0.16f, 0.08f, 4f), palette["aurora"], relay);
-            CreatePointLight("RelayGlow", new Vector3(0f, 3f, 0f), new Color(0.2f, 1f, 0.72f), 3.2f, 8f, relay);
+            CreatePart("RelayHaloA", new Vector3(0f, 2.75f, 0f), new Vector3(3.2f, 0.07f, 0.13f), palette["aurora"], relay);
+            CreatePart("RelayHaloB", new Vector3(0f, 2.75f, 0f), new Vector3(0.13f, 0.07f, 3.2f), palette["aurora"], relay);
+            CreatePointLight("RelayGlow", new Vector3(0f, 2.05f, 0f), new Color(0.2f, 1f, 0.72f), 2.4f, 6f, relay);
 
             CreateExteriorTower("NorthWestArchive", new Vector3(-18f, 0f, 18f), 9f, palette, arena);
             CreateExteriorTower("NorthEastArchive", new Vector3(18f, 0f, 18f), 12f, palette, arena);
@@ -662,17 +703,24 @@ namespace Web3Fps.GameFoundation.Editor
 
             var covers = new[]
             {
-                new Vector3(-12f, 1f, 4.5f), new Vector3(-12f, 1f, -4.5f),
-                new Vector3(-5f, 1f, 8f), new Vector3(-5f, 1f, -8f),
-                new Vector3(5f, 1f, 8f), new Vector3(5f, 1f, -8f),
-                new Vector3(12f, 1f, 4.5f), new Vector3(12f, 1f, -4.5f)
+                new Vector3(-16f, 0.72f, 4.6f), new Vector3(-16f, 0.72f, -4.6f),
+                new Vector3(-9f, 1f, 7.6f), new Vector3(-9f, 1f, -7.6f),
+                new Vector3(-6f, 0.72f, 1.7f), new Vector3(-6f, 0.72f, -1.7f),
+                new Vector3(6f, 0.72f, 1.7f), new Vector3(6f, 0.72f, -1.7f),
+                new Vector3(9f, 1f, 7.6f), new Vector3(9f, 1f, -7.6f),
+                new Vector3(16f, 0.72f, 4.6f), new Vector3(16f, 0.72f, -4.6f)
             };
             for (var i = 0; i < covers.Length; i++)
             {
-                CreatePart("CoverShell_" + i.ToString("00"), covers[i], new Vector3(3f, 2f, 1.2f), palette["bone"], arena);
+                var tall = i == 2 || i == 3 || i == 8 || i == 9;
+                var scale = tall ? new Vector3(2.7f, 2f, 1.1f) : new Vector3(3.4f, 1.42f, 1.15f);
+                CreatePart("CoverShell_" + i.ToString("00"), covers[i], scale, palette["bone"], arena, new Vector3(0f, i % 2 == 0 ? 8f : -8f, 0f));
                 var accent = i % 2 == 0 ? palette["cobaltGlow"] : palette["coralGlow"];
-                CreatePart("CoverSignal_" + i.ToString("00"), covers[i] + new Vector3(0f, 0.72f, -0.62f), new Vector3(2.2f, 0.14f, 0.04f), accent, arena);
+                CreatePart("CoverSignal_" + i.ToString("00"), covers[i] + new Vector3(0f, tall ? 0.72f : 0.48f, -0.6f), new Vector3(2.15f, 0.1f, 0.04f), accent, arena);
             }
+
+            CreatePart("CobaltSpawnShield", new Vector3(-19.4f, 0.7f, 8.1f), new Vector3(0.16f, 1.4f, 4.2f), palette["cobaltGlow"], arena);
+            CreatePart("CoralSpawnShield", new Vector3(19.4f, 0.7f, -8.1f), new Vector3(0.16f, 1.4f, 4.2f), palette["coralGlow"], arena);
 
             CreatePointLight("NorthWorkLight", new Vector3(-13f, 4.2f, 12.5f), new Color(0.28f, 0.58f, 1f), 4.2f, 12f, arena);
             CreatePointLight("SouthWorkLight", new Vector3(13f, 4.2f, -12.5f), new Color(1f, 0.31f, 0.16f), 4.2f, 12f, arena);
@@ -789,11 +837,126 @@ namespace Web3Fps.GameFoundation.Editor
             light.intensity = intensity;
         }
 
-        private static void CreateFirstPersonArms(
+        private static void CreateFirstPersonSkeletalArms(
+            Transform camera,
+            IReadOnlyDictionary<string, Material> palette,
+            RuntimeAnimatorController animatorController,
+            HitscanWeapon weapon)
+        {
+            var fallback = CreateFirstPersonArmsFallback(camera, palette);
+            fallback.SetActive(false);
+            var rig = CreateRiggedCharacter(CobaltCharacterFbx, "CobaltFirstPersonSkeleton", camera, 1.9f, animatorController);
+            if (rig == null)
+            {
+                fallback.SetActive(true);
+                return;
+            }
+
+            rig.transform.localPosition = new Vector3(0.06f, -1.52f, 0.12f);
+            rig.transform.localRotation = Quaternion.identity;
+            var keptRenderers = 0;
+            var renderers = rig.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            for (var i = 0; i < renderers.Length; i++)
+            {
+                var armsMesh = CreateArmOnlyMesh(renderers[i], i);
+                if (armsMesh == null)
+                {
+                    renderers[i].enabled = false;
+                    continue;
+                }
+                renderers[i].sharedMesh = armsMesh;
+                keptRenderers++;
+            }
+
+            if (keptRenderers == 0)
+            {
+                Object.DestroyImmediate(rig);
+                fallback.SetActive(true);
+                return;
+            }
+
+            PrepareRigRenderers(rig, new Color(0.08f, 0.48f, 0.9f), "CobaltViewRig");
+            foreach (var renderer in rig.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+            }
+            var animator = rig.GetComponentInChildren<Animator>();
+            var presentation = camera.gameObject.AddComponent<FormalFirstPersonRig>();
+            presentation.Configure(weapon, animator, rig.transform);
+            var guard = camera.gameObject.AddComponent<FormalCharacterRigGuard>();
+            guard.Configure(rig, fallback, animator);
+        }
+
+        private static Mesh CreateArmOnlyMesh(SkinnedMeshRenderer renderer, int rendererIndex)
+        {
+            var source = renderer.sharedMesh;
+            if (source == null || source.vertexCount == 0 || source.boneWeights.Length != source.vertexCount) return null;
+            var armBones = new bool[renderer.bones.Length];
+            var hasArmBone = false;
+            for (var i = 0; i < renderer.bones.Length; i++)
+            {
+                var boneName = renderer.bones[i] == null ? string.Empty : renderer.bones[i].name.ToLowerInvariant();
+                armBones[i] = boneName.Contains("arm") || boneName.Contains("hand") ||
+                              boneName.Contains("shoulder") || boneName.Contains("clavicle");
+                hasArmBone |= armBones[i];
+            }
+            if (!hasArmBone) return null;
+
+            var weights = source.boneWeights;
+            var armVertex = new bool[source.vertexCount];
+            for (var i = 0; i < weights.Length; i++) armVertex[i] = IsInfluencedByArm(weights[i], armBones);
+
+            var filtered = Object.Instantiate(source);
+            filtered.name = "CobaltFirstPersonArms_" + rendererIndex;
+            var keptTriangleCount = 0;
+            for (var subMesh = 0; subMesh < source.subMeshCount; subMesh++)
+            {
+                var triangles = source.GetTriangles(subMesh);
+                var kept = new List<int>(triangles.Length / 3);
+                for (var triangle = 0; triangle + 2 < triangles.Length; triangle += 3)
+                {
+                    var a = triangles[triangle];
+                    var b = triangles[triangle + 1];
+                    var c = triangles[triangle + 2];
+                    var influenced = (armVertex[a] ? 1 : 0) + (armVertex[b] ? 1 : 0) + (armVertex[c] ? 1 : 0);
+                    if (influenced < 2) continue;
+                    kept.Add(a);
+                    kept.Add(b);
+                    kept.Add(c);
+                }
+                filtered.SetTriangles(kept, subMesh, false);
+                keptTriangleCount += kept.Count / 3;
+            }
+            if (keptTriangleCount == 0)
+            {
+                Object.DestroyImmediate(filtered);
+                return null;
+            }
+            filtered.bounds = source.bounds;
+            AssetDatabase.CreateAsset(filtered, GeneratedMeshes + "/" + filtered.name + ".asset");
+            return filtered;
+        }
+
+        private static bool IsInfluencedByArm(BoneWeight weight, IReadOnlyList<bool> armBones)
+        {
+            return IsArmWeight(weight.boneIndex0, weight.weight0, armBones) ||
+                   IsArmWeight(weight.boneIndex1, weight.weight1, armBones) ||
+                   IsArmWeight(weight.boneIndex2, weight.weight2, armBones) ||
+                   IsArmWeight(weight.boneIndex3, weight.weight3, armBones);
+        }
+
+        private static bool IsArmWeight(int boneIndex, float weight, IReadOnlyList<bool> armBones)
+        {
+            return weight >= 0.08f && boneIndex >= 0 && boneIndex < armBones.Count && armBones[boneIndex];
+        }
+
+        private static GameObject CreateFirstPersonArmsFallback(
             Transform camera,
             IReadOnlyDictionary<string, Material> palette)
         {
-            var rig = new GameObject("FirstPersonArms").transform;
+            var root = new GameObject("FirstPersonArms // Safe Fallback");
+            var rig = root.transform;
             rig.SetParent(camera, false);
             rig.localPosition = new Vector3(0.04f, -0.12f, 0.18f);
             rig.localScale = Vector3.one * 0.3f;
@@ -803,12 +966,40 @@ namespace Web3Fps.GameFoundation.Editor
             CreateVisualPrimitive("RightForearmArmor", PrimitiveType.Cube, new Vector3(0.3f, -0.41f, 0.82f), new Vector3(0.12f, 0.21f, 0.12f), palette["armor"], rig, new Vector3(18f, 0f, 8f));
             CreateVisualPrimitive("LeftGlove", PrimitiveType.Sphere, new Vector3(-0.02f, -0.3f, 0.88f), new Vector3(0.1f, 0.08f, 0.12f), palette["graphite"], rig);
             CreateVisualPrimitive("RightGlove", PrimitiveType.Sphere, new Vector3(0.34f, -0.31f, 0.91f), new Vector3(0.1f, 0.08f, 0.12f), palette["graphite"], rig);
-            CreateVisualPrimitive("CobaltWristSignal", PrimitiveType.Cube, new Vector3(0.3f, -0.39f, 0.84f), new Vector3(0.09f, 0.025f, 0.065f), palette["cobaltGlow"], rig);
-            for (var finger = 0; finger < 3; finger++)
-            {
-                CreateVisualPrimitive("LeftGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(-0.05f + finger * 0.03f, -0.27f, 0.94f), new Vector3(0.022f, 0.018f, 0.045f), palette["armor"], rig);
-                CreateVisualPrimitive("RightGloveKnuckle_" + finger, PrimitiveType.Cube, new Vector3(0.31f + finger * 0.03f, -0.28f, 0.97f), new Vector3(0.022f, 0.018f, 0.045f), palette["armor"], rig);
-            }
+            return root;
+        }
+
+        private static void CreateDamageZones(Transform actor, Health health)
+        {
+            var zones = new GameObject("DamageZones").transform;
+            zones.SetParent(actor, false);
+            CreateSphereDamageZone("Head", new Vector3(0f, 1.72f, 0f), 0.28f, 2f, health, zones);
+            CreateBoxDamageZone("Torso", new Vector3(0f, 1.14f, 0f), new Vector3(0.78f, 0.92f, 0.52f), 1f, health, zones);
+            CreateBoxDamageZone("Legs", new Vector3(0f, 0.42f, 0f), new Vector3(0.66f, 0.72f, 0.48f), 0.78f, health, zones);
+        }
+
+        private static void CreateSphereDamageZone(
+            string name, Vector3 center, float radius, float multiplier, Health health, Transform parent)
+        {
+            var zone = new GameObject(name + "HitZone");
+            zone.transform.SetParent(parent, false);
+            var collider = zone.AddComponent<SphereCollider>();
+            collider.center = center;
+            collider.radius = radius;
+            collider.isTrigger = true;
+            zone.AddComponent<DamageZone>().Configure(health, name.ToLowerInvariant(), multiplier);
+        }
+
+        private static void CreateBoxDamageZone(
+            string name, Vector3 center, Vector3 size, float multiplier, Health health, Transform parent)
+        {
+            var zone = new GameObject(name + "HitZone");
+            zone.transform.SetParent(parent, false);
+            var collider = zone.AddComponent<BoxCollider>();
+            collider.center = center;
+            collider.size = size;
+            collider.isTrigger = true;
+            zone.AddComponent<DamageZone>().Configure(health, name.ToLowerInvariant(), multiplier);
         }
 
         private static GameObject CreatePart(string name, Vector3 position, Vector3 scale, Material material, Transform parent, Vector3? euler = null)

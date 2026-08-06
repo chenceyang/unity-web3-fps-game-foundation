@@ -16,6 +16,9 @@ The command creates:
 - visual-only player and bot tracers that do not participate in authoritative damage;
 - CC0 skeletal soldier FBX characters with generated idle, locomotion, firing and death animation states;
 - staged magazine reload motion, weapon/camera recoil and original synthesized weapon audio;
+- independently generated animation clips and a skeletal first-person arms view model with runtime bounds recovery;
+- head/torso/leg hit zones, spawn protection and deterministic movement/ADS/bloom accuracy;
+- a line-of-sight bot with reaction time, sight memory, range control and strafing;
 - Build Settings entries for both scenes.
 
 Controls: WASD move, Shift sprint, Space jump, mouse aim, left mouse fire, R reload, Escape unlock/lock cursor, and R restart after the result.

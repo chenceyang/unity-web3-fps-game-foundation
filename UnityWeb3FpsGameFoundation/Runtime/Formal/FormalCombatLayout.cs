@@ -5,8 +5,8 @@ namespace Web3Fps.GameFoundation.Formal
     public static class FormalCombatLayout
     {
         public const float OpeningLaneZ = 11f;
-        public const float RelayFootprintRadius = 2.4f;
-        public const float FurthestCoverCenterZ = 8f;
+        public const float RelayFootprintRadius = 2.05f;
+        public const float FurthestCoverCenterZ = 7.6f;
         public const float CoverHalfDepth = 0.6f;
         public const float ActorClearance = 0.6f;
 
@@ -17,5 +17,7 @@ namespace Web3Fps.GameFoundation.Formal
         {
             return Mathf.Abs(OpeningLaneZ - obstacleCenterZ) > obstacleHalfDepth + ActorClearance;
         }
+
+        public static float OpeningEngagementDistance => Vector3.Distance(PlayerSpawn, BotSpawn);
     }
 }

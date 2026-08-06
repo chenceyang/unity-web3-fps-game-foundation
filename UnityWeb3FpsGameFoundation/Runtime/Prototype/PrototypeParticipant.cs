@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Web3Fps.GameFoundation.Gameplay.Combat;
 
@@ -12,6 +13,7 @@ namespace Web3Fps.GameFoundation.Prototype
         [SerializeField] private string teamId = "team";
         [SerializeField] private Transform spawnPoint;
         [SerializeField] private MonoBehaviour[] controlledBehaviours = new MonoBehaviour[0];
+        [SerializeField, Min(0f)] private float spawnProtectionSeconds = 1.25f;
 
         private Health _health;
         private CharacterController _characterController;
@@ -23,6 +25,7 @@ namespace Web3Fps.GameFoundation.Prototype
         public string TeamId => teamId;
         public Health Health => _health;
         public Vector3 AimPoint => transform.position + Vector3.up * 1.35f;
+        public event Action Respawned;
 
         private void Awake()
         {
@@ -65,9 +68,11 @@ namespace Web3Fps.GameFoundation.Prototype
                 spawnPoint != null ? spawnPoint.rotation : _fallbackSpawnRotation);
             if (_characterController != null) _characterController.enabled = controllerWasEnabled;
             _health.RestoreToFull();
+            _health.GrantInvulnerability(spawnProtectionSeconds);
             var weapon = GetComponent<HitscanWeapon>();
             if (weapon != null) weapon.RefillAmmo();
             SetControlEnabled(true);
+            Respawned?.Invoke();
         }
     }
 }

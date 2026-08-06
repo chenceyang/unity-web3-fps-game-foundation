@@ -14,12 +14,22 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
         [SerializeField, Min(1)] private int magazineCapacity = 30;
         [SerializeField, Min(0)] private int startingReserveAmmo = 120;
         [SerializeField, Min(0.1f)] private float reloadDuration = 1.65f;
+        [Header("Handling")]
+        [SerializeField, Min(0f)] private float hipSpreadDegrees = 1.15f;
+        [SerializeField, Min(0f)] private float aimSpreadDegrees = 0.28f;
+        [SerializeField, Min(0f)] private float movementSpreadDegrees = 1.35f;
+        [SerializeField, Min(0f)] private float bloomPerShotDegrees = 0.16f;
+        [SerializeField, Min(0f)] private float maximumBloomDegrees = 1.8f;
+        [SerializeField, Min(0f)] private float bloomRecoveryPerSecond = 3.4f;
 
         private IShotCommandSink _sink;
         private WeaponAmmoState _ammo;
         private double _nextLocalShotAt;
         private double _reloadCompleteAt;
         private uint _sequence;
+        private float _movementAmount;
+        private float _bloom;
+        private bool _aimHeld;
 
         public event Action<ShotResult> ShotResolved;
         public event Action AmmoChanged;
@@ -33,6 +43,8 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
         public float ReloadProgress => !IsReloading || reloadDuration <= 0f
             ? 0f
             : Mathf.Clamp01(1f - (float)((_reloadCompleteAt - Time.timeAsDouble) / reloadDuration));
+        public float CurrentSpreadDegrees => WeaponAccuracyMath.CalculateSpread(
+            hipSpreadDegrees, aimSpreadDegrees, movementSpreadDegrees, _movementAmount, _aimHeld, _bloom);
 
         private void Awake()
         {
@@ -42,6 +54,7 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
 
         private void Update()
         {
+            _bloom = Mathf.MoveTowards(_bloom, 0f, bloomRecoveryPerSecond * Time.deltaTime);
             if (!IsReloading || Time.timeAsDouble < _reloadCompleteAt) return;
             _ammo.CompleteReload();
             AmmoChanged?.Invoke();
@@ -71,6 +84,12 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
             AmmoChanged?.Invoke();
         }
 
+        public void SetHandlingState(float movementAmount, bool aimHeld)
+        {
+            _movementAmount = Mathf.Clamp01(movementAmount);
+            _aimHeld = aimHeld;
+        }
+
         private void ResolveSink()
         {
             _sink = shotSink as IShotCommandSink;
@@ -82,13 +101,14 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
             InitializeAmmo();
             if (_sink == null || muzzle == null || !_ammo.CanFire || Time.timeAsDouble < _nextLocalShotAt) return false;
             _nextLocalShotAt = Time.timeAsDouble + 1d / roundsPerSecond;
+            var sequence = ++_sequence;
             var result = _sink.Submit(new ShotCommand
             {
                 ShooterId = shooterId,
                 ShooterObject = gameObject,
                 Origin = muzzle.position,
-                Direction = aimDirection.normalized,
-                Sequence = ++_sequence,
+                Direction = WeaponAccuracyMath.ApplySpread(aimDirection.normalized, sequence, CurrentSpreadDegrees),
+                Sequence = sequence,
                 ClientTimestamp = Time.timeAsDouble,
                 Damage = damage,
                 Range = range
@@ -96,6 +116,7 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
             if (result.Accepted)
             {
                 _ammo.ConsumeRound();
+                _bloom = Mathf.Min(maximumBloomDegrees, _bloom + bloomPerShotDegrees);
                 AmmoChanged?.Invoke();
             }
             ShotResolved?.Invoke(result);
@@ -116,6 +137,7 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
         {
             _ammo = new WeaponAmmoState(magazineCapacity, startingReserveAmmo);
             _reloadCompleteAt = 0d;
+            _bloom = 0f;
             AmmoChanged?.Invoke();
         }
 

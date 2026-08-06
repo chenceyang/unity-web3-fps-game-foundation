@@ -11,6 +11,9 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
         public float Current { get; private set; }
         public float Maximum => maximum;
         public bool IsDead => Current <= 0f;
+        public bool IsInvulnerable => Time.timeAsDouble < _invulnerableUntil;
+
+        private double _invulnerableUntil;
 
         public event Action<DamageInfo, float> Damaged;
         public event Action<DamageInfo> Died;
@@ -20,7 +23,7 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
 
         public bool ApplyDamage(DamageInfo damage)
         {
-            if (!HasAuthority() || IsDead || damage.Amount <= 0f || float.IsNaN(damage.Amount)) return false;
+            if (!HasAuthority() || IsDead || IsInvulnerable || damage.Amount <= 0f || float.IsNaN(damage.Amount)) return false;
             Current = Mathf.Max(0f, Current - damage.Amount);
             Damaged?.Invoke(damage, Current);
             if (IsDead) Died?.Invoke(damage);
@@ -33,6 +36,11 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
             Current = maximum;
             Reset?.Invoke(Current);
             return true;
+        }
+
+        public void GrantInvulnerability(float durationSeconds)
+        {
+            _invulnerableUntil = Time.timeAsDouble + Mathf.Max(0f, durationSeconds);
         }
 
         private bool HasAuthority()

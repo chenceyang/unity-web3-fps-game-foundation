@@ -135,7 +135,7 @@ namespace Web3Fps.GameFoundation.Formal
 
         private void OnShotResolved(ShotResult result)
         {
-            if (!result.Accepted || !result.Hit) return;
+            if (!result.Accepted || !result.DamageApplied) return;
             _hitMarkerUntil = Time.unscaledTime + 0.13f;
         }
 
