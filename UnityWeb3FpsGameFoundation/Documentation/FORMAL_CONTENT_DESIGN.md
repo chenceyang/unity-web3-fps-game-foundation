@@ -16,15 +16,9 @@
 - `RiftRelay` 已实现三路战斗灰盒、正式战斗 HUD、本地玩家/机器人、7 击杀与 5 分钟结算循环；v1.4.1
   加入断裂轨道环境背景、工业塔群、开放式平台、雾效、极光中继柱和阵营导视照明。
 - KESTREL-7、PULSE-9、RELAY-3 已有第一版可编辑轮廓 Prefab；其余三把武器尚未制作。
-- v1.4.2 已有独立 Coral 低多边形装甲角色、持枪装备和 Cobalt 第一人称双臂；完整骨骼动画与最终 FBX 尚未制作。
-- v1.5 已接通 30/120 弹药、R 装填、实时 HUD、命中标记和双方视觉弹道；HUD 借鉴生存 FPS 的低干扰信息层级，但采用 ASH//LEDGER 原创布局和素材。
-- 大厅角色预览已改用完整分层装甲 Prefab；第一人称手套、袖标、护甲与 KESTREL-7 持枪方向得到加强。
-- v1.6 导入两套 CC0 骨骼士兵 FBX 与内嵌动作，生成 Animator 状态机，并加入第一人称换弹、双层后坐力和原创合成音效。
-- v1.6.1 调整敌人出生区、加入轻量绕障和敌方识别灯，并降低第一人称手臂遮挡。
-- v1.6.2 缩小第一人称灰盒与武器占屏，为敌方骨骼模型保留纹理并增加阵营染色、阴影和高对比标记。
-- v1.6.3 缩小中央中继目标体量并改用北侧无遮挡开场车道，使敌方人物和地图装置在构图上明确分离。
-- v1.6.4 修正 FBX 动画层级的单位/轴缩放曲线污染，并在运行时以包围盒保险恢复异常骨骼为正常静态人物。
-- v1.7.0 将内嵌动作复制为独立动画资产，从 Cobalt 蒙皮生成第一人称骨骼手臂；接通分区命中、出生保护、动态散布、伤害命中反馈和战术机器人状态机，并重排 RIFT RELAY 的掩体与中央目标。
+- 两套 CC0 骨骼士兵 FBX 已接入大厅、敌方角色和 Cobalt 第一人称骨骼手臂；生成器创建独立动画资产、Animator 状态机及运行时尺寸保险。
+- 本地战斗已接通 30/120 弹药、装填、双层后坐力、原创合成音效、视觉弹道、分区命中、出生保护、动态散布与伤害确认。
+- Coral Bot 已具备视线、反应、记忆、距离控制、侧移和难度参数；RIFT RELAY 已重排开场视线、掩体与中央静态目标。
 - Unturned 仅作为低多边形轮廓、反馈节制和信息清晰度参考；不得复制其模型、纹理、动画、音效、名称或界面资产。
 - 当前角色、武器、场景均为灰盒资产；高精度模型、动画、特效、音频、联网和真实后端仍属于后续 Gate。
 
@@ -90,8 +84,7 @@
 
 ## 4. UI 信息架构
 
-正式前端建议使用 Unity UI Toolkit 的 UXML/USS/C# 分层；战斗 HUD 可保留 uGUI，以便处理准星、受击方向和高频动画。
-当前 IMGUI 只作为调试界面，不进入正式版本。
+正式前端和当前正式战斗 HUD 均使用 Unity UI Toolkit 的 UXML/USS/C# 分层；旧 IMGUI 只作为 Prototype/Web3 Lobby 调试样例，不进入正式版本。
 
 ### 4.1 顶层导航
 
@@ -285,7 +278,7 @@ Tournament 流程；美术内容仍由白名单目录发布，任何用户输入
 
 - 正式视觉基线：Unity 6 + URP，先以 PC 1080p/60fps 中档配置为临时性能目标。
 - 前端页面：UI Toolkit，UXML 管结构、USS 管主题、C# Presenter 绑定现有 Session/Service。
-- 战斗 HUD：可用 uGUI；只订阅战斗状态，不引用 Web3 网关。
+- 战斗 HUD：使用 UI Toolkit；只订阅战斗状态，不引用 Web3 网关。
 - 皮肤：共享 Shader Graph 主材质，通过参数、贴图集和合规附加件组合，避免每个 NFT 独立 Shader。
 - 远端 Bundle：先验证 `contentHash`，再实例化；失败加载本地默认资源。
 
@@ -363,7 +356,7 @@ Unity 6 UI Toolkit 与 URP 依据：
 
 | 当前实现 | 正式替代/扩展 |
 |---|---|
-| `PrototypeHud` / `Web3LobbyHud` IMGUI | UI Toolkit 前端 + uGUI 战斗 HUD |
+| `PrototypeHud` / `Web3LobbyHud` IMGUI | 正式大厅与战斗 HUD 已迁到 UI Toolkit；IMGUI 仅保留为调试样例 |
 | 方形 Prototype Arena | RIFT RELAY Greybox，然后模块化美术替换 |
 | 单一 `HitscanWeapon` | `WeaponDefinition` 目录 + 六种武器角色，仍通过权威 ShotCommand |
 | 三个 token 槽 | Weapon Finish / Operator Shell / Identity Signal |

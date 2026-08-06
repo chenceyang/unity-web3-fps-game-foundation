@@ -63,24 +63,12 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 2. 生成器会创建 `Assets/AshLedgerVerticalSlice/`，并自动打开 `Scenes/AshLedgerLobby.unity`。
 3. 按 Play，在大厅点击 `DEPLOY TO RIFT RELAY` 进入正式风格的本地对局。
 
-生成内容包括 UI Toolkit 正式大厅、Mock Web3 状态绑定、战斗 HUD、RIFT RELAY 三路灰盒地图，以及
-KESTREL-7、PULSE-9、RELAY-3 三把武器 Prefab。v1.4.1 进一步加入断裂轨道背景、工业塔群、极光中继柱、
-发光导视、雾效与局部灯光；v1.4.2 加入独立的精细低多边形敌方角色和第一人称双臂/持枪模型，不再依赖旧版
-Prototype Prefab；v1.4.3 修复 Unity 6 生成场景丢失 PanelSettings 导致 UI 不显示的问题。所有生成资产都位于项目
-`Assets` 下，可继续编辑。v1.4.4 会根据项目当前的 Built-in / URP / HDRP 渲染管线选择材质 Shader，并禁止在
-Play Mode 中运行生成器。
-v1.4.5 进一步修正 Unity 6 在 `UIDocument.OnEnable` 时清空 PanelSettings 的顺序问题，并在生成阶段强制校验引用。
-v1.4.6 不再依赖 UIDocument 自身保存该引用：正式 View 会保存备用 PanelSettings，并在运行时自动恢复 UI。
-v1.5 增加 30/120 弹药、R 键定时装填、实时装填进度、空仓提示和命中标记；玩家及机器人射击会生成短暂视觉弹道与枪口闪光，
-但命中与伤害仍只采用 `IShotCommandSink` 返回的权威 hitscan 结果。HUD 使用原创的低干扰生存 FPS 信息层级，不复制第三方游戏资源。
-大厅角色预览复用完整分层装甲 Prefab，第一人称手臂、手套与枪械姿态也增加了可编辑细节。
-v1.6 导入 Quaternius CC0 骨骼士兵 FBX，并由生成器创建 Idle / Run Carry / Shoot / Death Animator 状态机；
-第一人称武器加入换弹弧线、弹匣运动、枪械后坐力、可恢复相机后坐力以及原创运行时合成枪声和机械音。
-v1.6.1 将敌人出生点移出中央中继柱遮挡区，加入轻量绕障和敌方识别灯，并缩小第一人称手臂以保持瞄准视野。
-v1.6.2 进一步收敛第一人称灰盒占屏，为敌方骨骼模型保留原材质纹理并加入 Coral 阵营染色、阴影和高对比识别标记。
-v1.6.3 缩小容易被误认为巨人的中央中继建筑，并把双方开场出生点移到无遮挡车道，确保 1.9 米敌方骨骼角色立即可见。
-v1.6.4 修正 Generic FBX 动画重放单位/轴缩放曲线导致的运行时蒙皮爆炸，并以骨骼包围盒保险在渲染前恢复正常静态姿态。
-v1.7.0 将内嵌动作生成为独立 `.anim` 资产，从 Cobalt 骨骼网格生成第一人称手臂，并加入头/躯干/腿分区伤害、出生保护、动态散布、伤害命中确认、机器人视线/反应/记忆/侧移和更清晰的三路地图交战结构。
+当前生成内容包括 UI Toolkit 正式大厅与战斗 HUD、Mock Web3 状态绑定、RIFT RELAY 三路灰盒地图、
+KESTREL-7/PULSE-9/RELAY-3 三把武器 Prefab、Quaternius CC0 骨骼角色、独立 `.anim` 资产和骨骼第一人称手臂。
+本地战斗已接通 30/120 弹药、装填、弹匣/枪械/相机后坐力、原创合成音效、视觉弹道、表面弹着、
+头/躯干/腿分区伤害、出生保护、动态散布，以及带视线/反应/记忆/距离控制/侧移的 Bot。
+生成器会选择当前 Built-in/URP/HDRP 对应 Shader，持久化 UI Toolkit 引用，并用运行时骨骼包围盒保险处理异常动画。
+所有生成资产位于项目 `Assets/AshLedgerVerticalSlice/`，可以继续编辑；完整版本历史见 `CHANGELOG.md`。
 整体参考低多边形生存 FPS 的清晰轮廓与简洁反馈，但不复制 Unturned 的模型、动画、纹理或音频。
 角色和建筑仍是可继续替换的低多边形制作资产，并非写实 AAA 高精度模型；背景视觉已作为实际场景资源接入。
 
