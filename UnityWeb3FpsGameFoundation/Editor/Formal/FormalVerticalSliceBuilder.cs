@@ -26,11 +26,10 @@ namespace Web3Fps.GameFoundation.Editor
         private const string Scenes = Root + "/Scenes";
         private const string LobbyScene = Scenes + "/AshLedgerLobby.unity";
         private const string RelayScene = Scenes + "/RiftRelay.unity";
-        private const string PlayerPrefab = "Assets/Web3FpsPrototype/Prefabs/LocalPlayer.prefab";
-        private const string BotPrefab = "Assets/Web3FpsPrototype/Prefabs/PrototypeBot.prefab";
         private const string LobbyUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerLobby.uxml";
         private const string CombatUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerCombatHud.uxml";
         private const string BackdropTexture = "Packages/com.web3fps.game-foundation/Runtime/Formal/Art/RiftRelayOrbitalBackdrop.png";
+        private const string ArmorTexture = "Packages/com.web3fps.game-foundation/Runtime/Formal/Art/OperatorArmorSurface.png";
 
         [MenuItem("Tools/Web3 FPS/Create ASH LEDGER Vertical Slice")]
         public static void Create()
@@ -41,7 +40,6 @@ namespace Web3Fps.GameFoundation.Editor
                     "Replace",
                     "Cancel")) return;
 
-            EnsurePrototypeAssets();
             if (AssetDatabase.IsValidFolder(Root)) AssetDatabase.DeleteAsset(Root);
             EnsureFolder(Materials);
             EnsureFolder(Prefabs);
@@ -49,9 +47,11 @@ namespace Web3Fps.GameFoundation.Editor
 
             var palette = CreatePalette();
             var weapons = CreateWeaponPrefabs(palette);
+            var playerPrefab = CreateFormalPlayerPrefab();
+            var botPrefab = CreateFormalBotPrefab(palette, weapons[0]);
             var panelSettings = CreatePanelSettings();
             CreateLobbyScene(palette, weapons, panelSettings);
-            CreateRiftRelayScene(palette, weapons[0], panelSettings);
+            CreateRiftRelayScene(palette, weapons[0], playerPrefab, botPrefab, panelSettings);
             SetBuildScenes();
 
             AssetDatabase.SaveAssets();
@@ -61,13 +61,6 @@ namespace Web3Fps.GameFoundation.Editor
             EditorGUIUtility.PingObject(sceneAsset);
             EditorSceneManager.OpenScene(LobbyScene);
             Debug.Log("ASH//LEDGER vertical slice created. Lobby is open; press Play, then select DEPLOY TO RIFT RELAY.");
-        }
-
-        private static void EnsurePrototypeAssets()
-        {
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefab) != null &&
-                AssetDatabase.LoadAssetAtPath<GameObject>(BotPrefab) != null) return;
-            PrototypeSceneBuilder.CreateLocalPrototypeScene();
         }
 
         private static Dictionary<string, Material> CreatePalette()
@@ -84,6 +77,7 @@ namespace Web3Fps.GameFoundation.Editor
                 ["cobaltGlow"] = CreateEmissiveMaterial("CobaltGlow", new Color(0.06f, 0.42f, 0.78f), 1.8f),
                 ["coralGlow"] = CreateEmissiveMaterial("CoralGlow", new Color(0.88f, 0.16f, 0.13f), 1.8f),
                 ["warmGlow"] = CreateEmissiveMaterial("WarmGlow", new Color(0.94f, 0.48f, 0.18f), 2.1f),
+                ["armor"] = CreateTexturedMaterial("OperatorArmor", new Color(0.86f, 0.85f, 0.78f), ArmorTexture, 0.42f),
                 ["backdrop"] = CreateBackdropMaterial()
             };
         }
@@ -123,6 +117,100 @@ namespace Web3Fps.GameFoundation.Editor
             }
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + name + ".prefab");
             Object.DestroyImmediate(root);
+            return prefab;
+        }
+
+        private static GameObject CreateFormalPlayerPrefab()
+        {
+            var source = new GameObject("CobaltOperator");
+            var controller = source.AddComponent<CharacterController>();
+            controller.center = Vector3.up;
+            controller.height = 2f;
+            controller.radius = 0.42f;
+            source.AddComponent<Health>();
+            var motor = source.AddComponent<PlayerMotor>();
+            var look = source.AddComponent<FirstPersonLook>();
+            var shotSink = source.AddComponent<LocalAuthoritativeShotSink>();
+            var weapon = source.AddComponent<HitscanWeapon>();
+            var participant = source.AddComponent<PrototypeParticipant>();
+            var input = source.AddComponent<PrototypeInputDriver>();
+
+            var view = new GameObject("ViewPivot").transform;
+            view.SetParent(source.transform, false);
+            view.localPosition = new Vector3(0f, 1.62f, 0f);
+            var camera = view.gameObject.AddComponent<Camera>();
+            camera.fieldOfView = 72f;
+            camera.nearClipPlane = 0.03f;
+            view.gameObject.AddComponent<AudioListener>();
+            view.gameObject.tag = "MainCamera";
+
+            look.Configure(view);
+            weapon.Configure("local-player", view, shotSink);
+            participant.Configure("local-player", "Cobalt", "cobalt", null, new MonoBehaviour[] { motor, look, input });
+            input.Configure(participant, motor, look, weapon, view, null);
+            var prefab = PrefabUtility.SaveAsPrefabAsset(source, Prefabs + "/CobaltOperator.prefab");
+            Object.DestroyImmediate(source);
+            return prefab;
+        }
+
+        private static GameObject CreateFormalBotPrefab(
+            IReadOnlyDictionary<string, Material> palette,
+            GameObject weaponPrefab)
+        {
+            var source = new GameObject("CoralOperator");
+            var controller = source.AddComponent<CharacterController>();
+            controller.center = Vector3.up;
+            controller.height = 2f;
+            controller.radius = 0.48f;
+            source.AddComponent<Health>();
+            var botController = source.AddComponent<PrototypeBotController>();
+            var participant = source.AddComponent<PrototypeParticipant>();
+            participant.Configure("prototype-bot", "Coral", "coral", null, new MonoBehaviour[] { botController });
+            botController.Configure(participant, null);
+
+            var visual = new GameObject("OperatorVisual").transform;
+            visual.SetParent(source.transform, false);
+            CreateVisualPrimitive("Torso", PrimitiveType.Capsule, new Vector3(0f, 1.35f, 0f), new Vector3(0.55f, 0.72f, 0.38f), palette["graphite"], visual);
+            CreateVisualPrimitive("NeckSeal", PrimitiveType.Cylinder, new Vector3(0f, 1.9f, 0f), new Vector3(0.4f, 0.13f, 0.4f), palette["copper"], visual);
+            CreateVisualPrimitive("ChestCeramic", PrimitiveType.Cube, new Vector3(0f, 1.55f, 0.34f), new Vector3(0.76f, 0.64f, 0.18f), palette["armor"], visual, new Vector3(5f, 0f, 0f));
+            CreateVisualPrimitive("ChestInset", PrimitiveType.Cube, new Vector3(0f, 1.49f, 0.455f), new Vector3(0.44f, 0.28f, 0.045f), palette["graphite"], visual);
+            CreateVisualPrimitive("UpperBackPlate", PrimitiveType.Cube, new Vector3(0f, 1.57f, -0.34f), new Vector3(0.68f, 0.55f, 0.15f), palette["armor"], visual);
+            CreateVisualPrimitive("Helmet", PrimitiveType.Sphere, new Vector3(0f, 2.2f, 0f), new Vector3(0.6f, 0.54f, 0.58f), palette["armor"], visual);
+            CreateVisualPrimitive("HelmetJaw", PrimitiveType.Cube, new Vector3(0f, 2.02f, 0.1f), new Vector3(0.48f, 0.24f, 0.42f), palette["graphite"], visual);
+            CreateVisualPrimitive("Faceplate", PrimitiveType.Cube, new Vector3(0f, 2.2f, 0.47f), new Vector3(0.48f, 0.23f, 0.08f), palette["graphite"], visual);
+            CreateVisualPrimitive("VisorSignal", PrimitiveType.Cube, new Vector3(0f, 2.23f, 0.52f), new Vector3(0.34f, 0.07f, 0.025f), palette["coralGlow"], visual);
+            CreateVisualPrimitive("LeftCommsPod", PrimitiveType.Cylinder, new Vector3(-0.47f, 2.2f, 0f), new Vector3(0.13f, 0.1f, 0.13f), palette["copper"], visual, new Vector3(0f, 0f, 90f));
+            CreateVisualPrimitive("RightCommsPod", PrimitiveType.Cylinder, new Vector3(0.47f, 2.2f, 0f), new Vector3(0.13f, 0.1f, 0.13f), palette["copper"], visual, new Vector3(0f, 0f, 90f));
+            CreateVisualPrimitive("LeftShoulder", PrimitiveType.Cube, new Vector3(-0.63f, 1.68f, 0f), new Vector3(0.4f, 0.34f, 0.52f), palette["armor"], visual, new Vector3(0f, 0f, -7f));
+            CreateVisualPrimitive("RightShoulder", PrimitiveType.Cube, new Vector3(0.63f, 1.68f, 0f), new Vector3(0.4f, 0.34f, 0.52f), palette["armor"], visual, new Vector3(0f, 0f, 7f));
+            CreateVisualPrimitive("LeftArm", PrimitiveType.Capsule, new Vector3(-0.68f, 1.08f, 0.08f), new Vector3(0.22f, 0.48f, 0.22f), palette["graphite"], visual, new Vector3(22f, 0f, 0f));
+            CreateVisualPrimitive("RightArm", PrimitiveType.Capsule, new Vector3(0.68f, 1.08f, 0.08f), new Vector3(0.22f, 0.48f, 0.22f), palette["graphite"], visual, new Vector3(22f, 0f, 0f));
+            CreateVisualPrimitive("LeftForearmPlate", PrimitiveType.Cube, new Vector3(-0.68f, 0.98f, 0.28f), new Vector3(0.3f, 0.46f, 0.2f), palette["armor"], visual, new Vector3(22f, 0f, 0f));
+            CreateVisualPrimitive("RightForearmPlate", PrimitiveType.Cube, new Vector3(0.68f, 0.98f, 0.28f), new Vector3(0.3f, 0.46f, 0.2f), palette["armor"], visual, new Vector3(22f, 0f, 0f));
+            CreateVisualPrimitive("LeftGlove", PrimitiveType.Sphere, new Vector3(-0.42f, 1.02f, 0.66f), new Vector3(0.22f, 0.18f, 0.24f), palette["graphite"], visual);
+            CreateVisualPrimitive("RightGlove", PrimitiveType.Sphere, new Vector3(0.34f, 1.04f, 0.72f), new Vector3(0.22f, 0.18f, 0.24f), palette["graphite"], visual);
+            CreateVisualPrimitive("Pelvis", PrimitiveType.Cube, new Vector3(0f, 0.72f, 0f), new Vector3(0.62f, 0.38f, 0.4f), palette["graphite"], visual);
+            CreateVisualPrimitive("Belt", PrimitiveType.Cube, new Vector3(0f, 0.83f, 0.04f), new Vector3(0.78f, 0.16f, 0.46f), palette["copper"], visual);
+            CreateVisualPrimitive("LeftBeltPouch", PrimitiveType.Cube, new Vector3(-0.48f, 0.72f, 0.28f), new Vector3(0.22f, 0.28f, 0.16f), palette["graphite"], visual);
+            CreateVisualPrimitive("RightBeltPouch", PrimitiveType.Cube, new Vector3(0.48f, 0.72f, 0.28f), new Vector3(0.22f, 0.28f, 0.16f), palette["graphite"], visual);
+            CreateVisualPrimitive("LeftLeg", PrimitiveType.Capsule, new Vector3(-0.25f, 0.26f, 0f), new Vector3(0.25f, 0.48f, 0.25f), palette["graphite"], visual);
+            CreateVisualPrimitive("RightLeg", PrimitiveType.Capsule, new Vector3(0.25f, 0.26f, 0f), new Vector3(0.25f, 0.48f, 0.25f), palette["graphite"], visual);
+            CreateVisualPrimitive("LeftKnee", PrimitiveType.Cube, new Vector3(-0.25f, 0.36f, 0.24f), new Vector3(0.3f, 0.32f, 0.16f), palette["armor"], visual);
+            CreateVisualPrimitive("RightKnee", PrimitiveType.Cube, new Vector3(0.25f, 0.36f, 0.24f), new Vector3(0.3f, 0.32f, 0.16f), palette["armor"], visual);
+            CreateVisualPrimitive("LeftBoot", PrimitiveType.Cube, new Vector3(-0.25f, 0.05f, 0.14f), new Vector3(0.32f, 0.22f, 0.52f), palette["graphite"], visual);
+            CreateVisualPrimitive("RightBoot", PrimitiveType.Cube, new Vector3(0.25f, 0.05f, 0.14f), new Vector3(0.32f, 0.22f, 0.52f), palette["graphite"], visual);
+            CreateVisualPrimitive("ArchivePack", PrimitiveType.Cube, new Vector3(0f, 1.43f, -0.5f), new Vector3(0.54f, 0.72f, 0.24f), palette["slate"], visual);
+            CreateVisualPrimitive("PackBeacon", PrimitiveType.Cylinder, new Vector3(0.28f, 1.98f, -0.48f), new Vector3(0.08f, 0.32f, 0.08f), palette["coralGlow"], visual);
+            CreateVisualPrimitive("CoralBand", PrimitiveType.Cube, new Vector3(0f, 1.42f, 0.54f), new Vector3(0.5f, 0.08f, 0.035f), palette["coralGlow"], visual);
+
+            var heldWeapon = Object.Instantiate(weaponPrefab, visual);
+            heldWeapon.name = "KESTREL-7 // Bot Weapon";
+            heldWeapon.transform.localPosition = new Vector3(0.25f, 1.18f, 0.7f);
+            heldWeapon.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
+            heldWeapon.transform.localScale = Vector3.one * 0.72f;
+
+            var prefab = PrefabUtility.SaveAsPrefabAsset(source, Prefabs + "/CoralOperator.prefab");
+            Object.DestroyImmediate(source);
             return prefab;
         }
 
@@ -201,6 +289,8 @@ namespace Web3Fps.GameFoundation.Editor
         private static void CreateRiftRelayScene(
             IReadOnlyDictionary<string, Material> palette,
             GameObject viewWeapon,
+            GameObject playerSource,
+            GameObject botSource,
             PanelSettings panelSettings)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -214,8 +304,6 @@ namespace Web3Fps.GameFoundation.Editor
             spawnRoot.SetParent(root);
             var playerSpawn = CreateSpawn("CobaltSpawn", new Vector3(-18f, 0f, 0f), Quaternion.LookRotation(Vector3.right), spawnRoot);
             var botSpawn = CreateSpawn("CoralSpawn", new Vector3(18f, 0f, 0f), Quaternion.LookRotation(Vector3.left), spawnRoot);
-            var playerSource = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefab);
-            var botSource = AssetDatabase.LoadAssetAtPath<GameObject>(BotPrefab);
             var player = (GameObject)PrefabUtility.InstantiatePrefab(playerSource);
             var bot = (GameObject)PrefabUtility.InstantiatePrefab(botSource);
             player.name = "CobaltOperator";
@@ -238,6 +326,7 @@ namespace Web3Fps.GameFoundation.Editor
             held.transform.localPosition = new Vector3(0.42f, -0.31f, 0.78f);
             held.transform.localRotation = Quaternion.Euler(2f, 2f, 0f);
             held.transform.localScale = Vector3.one * 0.72f;
+            CreateFirstPersonArms(aimSource, palette);
 
             var botParticipant = bot.GetComponent<PrototypeParticipant>();
             var botController = bot.GetComponent<PrototypeBotController>();
@@ -436,9 +525,39 @@ namespace Web3Fps.GameFoundation.Editor
             light.intensity = intensity;
         }
 
+        private static void CreateFirstPersonArms(
+            Transform camera,
+            IReadOnlyDictionary<string, Material> palette)
+        {
+            var rig = new GameObject("FirstPersonArms").transform;
+            rig.SetParent(camera, false);
+            CreateVisualPrimitive("LeftSleeve", PrimitiveType.Capsule, new Vector3(-0.23f, -0.38f, 0.6f), new Vector3(0.13f, 0.34f, 0.13f), palette["graphite"], rig, new Vector3(68f, 0f, -16f));
+            CreateVisualPrimitive("RightSleeve", PrimitiveType.Capsule, new Vector3(0.25f, -0.39f, 0.63f), new Vector3(0.13f, 0.36f, 0.13f), palette["graphite"], rig, new Vector3(66f, 0f, 15f));
+            CreateVisualPrimitive("LeftForearmArmor", PrimitiveType.Cube, new Vector3(-0.18f, -0.31f, 0.73f), new Vector3(0.18f, 0.28f, 0.18f), palette["armor"], rig, new Vector3(18f, 0f, -10f));
+            CreateVisualPrimitive("RightForearmArmor", PrimitiveType.Cube, new Vector3(0.3f, -0.31f, 0.76f), new Vector3(0.18f, 0.3f, 0.18f), palette["armor"], rig, new Vector3(16f, 0f, 10f));
+            CreateVisualPrimitive("LeftGlove", PrimitiveType.Sphere, new Vector3(-0.1f, -0.23f, 0.84f), new Vector3(0.14f, 0.12f, 0.17f), palette["graphite"], rig);
+            CreateVisualPrimitive("RightGlove", PrimitiveType.Sphere, new Vector3(0.36f, -0.24f, 0.88f), new Vector3(0.14f, 0.12f, 0.17f), palette["graphite"], rig);
+            CreateVisualPrimitive("CobaltWristSignal", PrimitiveType.Cube, new Vector3(0.32f, -0.29f, 0.86f), new Vector3(0.12f, 0.035f, 0.09f), palette["cobaltGlow"], rig);
+        }
+
         private static GameObject CreatePart(string name, Vector3 position, Vector3 scale, Material material, Transform parent, Vector3? euler = null)
         {
             return CreatePrimitive(name, PrimitiveType.Cube, position, scale, material, parent, euler);
+        }
+
+        private static GameObject CreateVisualPrimitive(
+            string name,
+            PrimitiveType type,
+            Vector3 position,
+            Vector3 scale,
+            Material material,
+            Transform parent,
+            Vector3? euler = null)
+        {
+            var visual = CreatePrimitive(name, type, position, scale, material, parent, euler);
+            var collider = visual.GetComponent<Collider>();
+            if (collider != null) Object.DestroyImmediate(collider);
+            return visual;
         }
 
         private static GameObject CreatePrimitive(string name, PrimitiveType type, Vector3 position, Vector3 scale, Material material, Transform parent, Vector3? euler = null)
@@ -484,6 +603,23 @@ namespace Web3Fps.GameFoundation.Editor
                 material.SetColor("_EmissionColor", color * intensity);
                 material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             }
+            return material;
+        }
+
+        private static Material CreateTexturedMaterial(
+            string name,
+            Color color,
+            string texturePath,
+            float smoothness)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var material = new Material(shader) { color = color };
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+            if (texture == null) throw new InvalidOperationException("Missing formal material texture: " + texturePath);
+            if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
+            if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smoothness);
+            AssetDatabase.CreateAsset(material, Materials + "/" + name + ".mat");
             return material;
         }
 

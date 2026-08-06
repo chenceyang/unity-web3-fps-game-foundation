@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2 - 2026-08-06
+
+- Removed the formal scene's dependency on legacy generated Prototype prefabs, preventing missing-script actor instances.
+- Added a layered low-poly Coral operator with textured ceramic armor, helmet, visor, equipment, limbs and weapon.
+- Added visible first-person Cobalt arms, gloves, armor and wrist signal around the KESTREL-7 view model.
+
 ## 1.4.1 - 2026-08-06
 
 - Replaced the enclosed color-block arena presentation with an open orbital-industrial RIFT RELAY visual slice.
