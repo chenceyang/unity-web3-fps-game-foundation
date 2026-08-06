@@ -251,13 +251,16 @@ namespace Web3Fps.GameFoundation.Editor
             {
                 PrepareRigRenderers(rig, new Color(0.88f, 0.22f, 0.17f), "CoralRig");
                 visual.gameObject.SetActive(false);
+                var rigAnimator = rig.GetComponentInChildren<Animator>();
                 var hand = FindDescendant(rig.transform, "LowerArm.R") ?? rig.transform;
                 heldWeapon.transform.SetParent(hand, false);
                 heldWeapon.transform.localPosition = new Vector3(0f, -0.18f, 0.08f);
                 heldWeapon.transform.localRotation = Quaternion.Euler(0f, -90f, -90f);
                 heldWeapon.transform.localScale = Vector3.one * 0.62f;
                 var characterAnimator = source.AddComponent<FormalCharacterAnimator>();
-                characterAnimator.Configure(rig.GetComponentInChildren<Animator>(), controller, source.GetComponent<Health>(), botController);
+                characterAnimator.Configure(rigAnimator, controller, source.GetComponent<Health>(), botController);
+                var rigGuard = source.AddComponent<FormalCharacterRigGuard>();
+                rigGuard.Configure(rig, visual.gameObject, rigAnimator);
             }
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(source, Prefabs + "/CoralOperator.prefab");
@@ -442,11 +445,17 @@ namespace Web3Fps.GameFoundation.Editor
             var importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
             if (importer == null) throw new InvalidOperationException("Missing skeletal character FBX: " + assetPath);
             var changed = importer.animationType != ModelImporterAnimationType.Generic ||
-                          !importer.importAnimation || importer.importCameras || importer.importLights;
+                          !importer.importAnimation || importer.importCameras || importer.importLights ||
+                          !importer.removeConstantScaleCurves || !importer.bakeAxisConversion ||
+                          !importer.preserveHierarchy || importer.resampleCurves;
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.importAnimation = true;
             importer.importCameras = false;
             importer.importLights = false;
+            importer.removeConstantScaleCurves = true;
+            importer.bakeAxisConversion = true;
+            importer.preserveHierarchy = true;
+            importer.resampleCurves = false;
             if (changed) importer.SaveAndReimport();
         }
 

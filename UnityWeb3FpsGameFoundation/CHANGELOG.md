@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.4 - 2026-08-07
+
+- Fixed the actual moving giant: Generic FBX animation was replaying imported unit/axis transform curves and exploding the Coral skinned hierarchy at runtime.
+- Enabled baked axis conversion, preserved hierarchy and removed redundant constant scale curves during character import.
+- Added a runtime rig-bounds guard that disables a corrupt Animator and restores the captured rest pose before rendering; a safe humanoid fallback remains available.
+- Added normal and exploded rig-bounds coverage; the static audit now passes 47 tests.
+
 ## 1.6.3 - 2026-08-07
 
 - Correctly identified the apparent giant as the 7.6-metre central relay architecture, not the 1.9-metre skeletal enemy.
