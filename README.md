@@ -8,7 +8,7 @@
 - `UnityWeb3FpsGameFoundation/README.md`：包安装、接口和集成合同。
 - `UnityWeb3FpsGameFoundation/Documentation/INTEGRATION_CHECKLIST.md`：尚未完成的游戏/服务器接入清单。
 - `UnityWeb3FpsGameFoundation/Documentation/FORMAL_CONTENT_DESIGN.md`：正式 UI、美术、地图、武器与 Web3 创意的制作规格。
-- `outputs/UnityWeb3FpsGameFoundation_v1.5.zip`：由包源码生成的当前分发产物，不是编辑源。
+- `outputs/UnityWeb3FpsGameFoundation_v1.6.zip`：由包源码生成的当前分发产物，不是编辑源。
 - `tools/build_game_design_doc.py`：需求文档 DOCX 的可复现生成器。
 - `references/`：带来源和哈希说明的上游只读快照。
 - `work/`：一次性编译审计与 PDF 检查产物，不是项目事实来源。
@@ -17,7 +17,7 @@
 
 - 包已在 Unity `6000.3.21f1` 中导入；运行时和 EditMode 测试程序集均已编译。
 - `com.unity.test-framework 1.6.0` 与 `com.unity.ext.nunit 2.0.5` 已在当前集成工程解析。
-- 纯 C# Keccak/结果序列化审计通过，Unity API 语法审计为 0 错误、0 警告。
+- 纯 C# Keccak/结果序列化审计通过，Unity API 静态编译为 0 错误；现有 3 个序列化字段警告与本次角色功能无关。
 - 已实现 Mock/HTTP 资产网关、钱包/奖励轮询、loadout 校验、赛事交易意图、结果哈希、AssetBundle 内容校验，以及基础移动/射击/伤害组件。
 - v1.1 已加入本地可玩 Prototype 的场景/Prefab 生成器、机器人、复活、比分、倒计时、胜负和 HUD；
   尚待在 Unity `6000.3.21f1` 重新编译并手工完成一局。
@@ -29,11 +29,13 @@
   尚未接入具体联网 SDK、真实专用服务器进程和持久化后端队列。
 - v1.5 已加入 30/120 弹药、R 键装填、装填进度、空仓提示、命中标记、玩家/机器人视觉弹道和枪口闪光；
   正式 HUD 改为低干扰生存 FPS 信息布局，大厅和第一人称角色模型增加装甲细节；静态编译通过，39 个测试全部通过。
+- v1.6 已导入两套 CC0 骨骼士兵 FBX 及 Idle/Walk/Run/Shoot/Jump/Death 动画，加入 Animator 状态机、
+  第一人称换弹、弹匣运动、枪械/相机后坐力和原创程序化射击音效；静态编译通过，41 个测试全部通过。
 
 ## 尚未完成
 
 - 完整正式前端仍缺登录、匹配确认、资产详情、独立赛后页和市场外跳页；v1.4 已完成首个大厅/HUD 垂直切片。
-- 生产级骨骼角色、动画、音频和最终地图资产；v1.5 已有程序化精细低多边形模型与基础射击 VFX，但仍不是最终 FBX/动作资产。
+- 最终定制角色拓扑、面部表现、动作捕捉、录音棚音频和最终地图资产；v1.6 已具备可商用 CC0 骨骼低多边形角色及完整表现管线。
 - 具体联网 SDK 传输层、断线重连、快照广播和双客户端联调。
 - 真实后端 entitlement-check、持久化存证队列、奖励幂等链路及端到端联调。
 - 需求文档中的 14 项端到端验收；现有测试仅覆盖底层组件。

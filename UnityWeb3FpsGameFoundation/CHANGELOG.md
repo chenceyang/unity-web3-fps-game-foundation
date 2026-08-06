@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0 - 2026-08-07
+
+- Imported two commercial-use CC0 skeletal low-poly soldier FBX assets with embedded idle, locomotion, shooting, jump and death animation clips.
+- Added generated Animator controllers and a runtime character animation bridge for bot locomotion, firing and death states.
+- Added a staged first-person reload animation, magazine motion, weapon kick and recoverable camera recoil.
+- Added original runtime-synthesized gunshot, magazine-release and magazine-seat audio without shipping third-party sound samples.
+- Recorded third-party source, license and SHA-256 provenance; the static audit now passes 41 tests.
+
 ## 1.5.0 - 2026-08-07
 
 - Added a 30-round magazine, reserve ammunition, timed reload on R and respawn refill with isolated EditMode coverage.

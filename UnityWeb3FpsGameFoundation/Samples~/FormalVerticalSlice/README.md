@@ -14,8 +14,10 @@ The command creates:
 - KESTREL-7, PULSE-9 and RELAY-3 blockout prefabs;
 - a combat-only HUD with live magazine/reserve ammo, reload state and hit feedback, with no wallet, token or chain status;
 - visual-only player and bot tracers that do not participate in authoritative damage;
+- CC0 skeletal soldier FBX characters with generated idle, locomotion, firing and death animation states;
+- staged magazine reload motion, weapon/camera recoil and original synthesized weapon audio;
 - Build Settings entries for both scenes.
 
 Controls: WASD move, Shift sprint, Space jump, mouse aim, left mouse fire, R reload, Escape unlock/lock cursor, and R restart after the result.
 
-This is the first production vertical slice, not final character art, animation, audio, networking or a production backend. NFT finishes are presentation-only and never change weapon statistics.
+This is a production-oriented low-poly vertical slice, not final custom character art, motion capture, studio audio, networking or a production backend. NFT finishes are presentation-only and never change weapon statistics.

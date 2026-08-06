@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -30,6 +31,8 @@ namespace Web3Fps.GameFoundation.Editor
         private const string CombatUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerCombatHud.uxml";
         private const string BackdropTexture = "Packages/com.web3fps.game-foundation/Runtime/Formal/Art/RiftRelayOrbitalBackdrop.png";
         private const string ArmorTexture = "Packages/com.web3fps.game-foundation/Runtime/Formal/Art/OperatorArmorSurface.png";
+        private const string CobaltCharacterFbx = "Packages/com.web3fps.game-foundation/Runtime/Formal/ThirdParty/Quaternius/Characters/BlueSoldier_Male.fbx";
+        private const string CoralCharacterFbx = "Packages/com.web3fps.game-foundation/Runtime/Formal/ThirdParty/Quaternius/Characters/Soldier_Male.fbx";
 
         [MenuItem("Tools/Web3 FPS/Create ASH LEDGER Vertical Slice")]
         public static void Create()
@@ -59,12 +62,17 @@ namespace Web3Fps.GameFoundation.Editor
             EnsureFolder(Prefabs);
             EnsureFolder(Scenes);
 
+            ConfigureCharacterImporter(CobaltCharacterFbx);
+            ConfigureCharacterImporter(CoralCharacterFbx);
+            var cobaltAnimator = CreateCharacterAnimatorController(CobaltCharacterFbx, Prefabs + "/CobaltOperator.controller");
+            var coralAnimator = CreateCharacterAnimatorController(CoralCharacterFbx, Prefabs + "/CoralOperator.controller");
+
             var palette = CreatePalette();
             var weapons = CreateWeaponPrefabs(palette);
             var playerPrefab = CreateFormalPlayerPrefab();
-            var botPrefab = CreateFormalBotPrefab(palette, weapons[0]);
+            var botPrefab = CreateFormalBotPrefab(palette, weapons[0], coralAnimator);
             var panelSettings = CreatePanelSettings();
-            CreateLobbyScene(palette, weapons, botPrefab, panelSettings);
+            CreateLobbyScene(palette, weapons, botPrefab, cobaltAnimator, panelSettings);
             CreateRiftRelayScene(palette, weapons[0], playerPrefab, botPrefab, panelSettings);
             SetBuildScenes();
 
@@ -176,7 +184,8 @@ namespace Web3Fps.GameFoundation.Editor
 
         private static GameObject CreateFormalBotPrefab(
             IReadOnlyDictionary<string, Material> palette,
-            GameObject weaponPrefab)
+            GameObject weaponPrefab,
+            RuntimeAnimatorController animatorController)
         {
             var source = new GameObject("CoralOperator");
             var controller = source.AddComponent<CharacterController>();
@@ -237,6 +246,19 @@ namespace Web3Fps.GameFoundation.Editor
             heldWeapon.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
             heldWeapon.transform.localScale = Vector3.one * 0.72f;
 
+            var rig = CreateRiggedCharacter(CoralCharacterFbx, "CoralSkeleton", source.transform, 2.16f, animatorController);
+            if (rig != null)
+            {
+                visual.gameObject.SetActive(false);
+                var hand = FindDescendant(rig.transform, "LowerArm.R") ?? rig.transform;
+                heldWeapon.transform.SetParent(hand, false);
+                heldWeapon.transform.localPosition = new Vector3(0f, -0.18f, 0.08f);
+                heldWeapon.transform.localRotation = Quaternion.Euler(0f, -90f, -90f);
+                heldWeapon.transform.localScale = Vector3.one * 0.62f;
+                var characterAnimator = source.AddComponent<FormalCharacterAnimator>();
+                characterAnimator.Configure(rig.GetComponentInChildren<Animator>(), controller, source.GetComponent<Health>(), botController);
+            }
+
             var prefab = PrefabUtility.SaveAsPrefabAsset(source, Prefabs + "/CoralOperator.prefab");
             Object.DestroyImmediate(source);
             return prefab;
@@ -284,6 +306,7 @@ namespace Web3Fps.GameFoundation.Editor
             IReadOnlyDictionary<string, Material> palette,
             IReadOnlyList<GameObject> weapons,
             GameObject operatorPrefab,
+            RuntimeAnimatorController animatorController,
             PanelSettings panelSettings)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -308,13 +331,16 @@ namespace Web3Fps.GameFoundation.Editor
             CreatePointLight("Operator Rim", new Vector3(4.6f, 4.3f, -0.5f), new Color(0.33f, 0.68f, 1f), 5.5f, 11f, root);
             CreatePointLight("Archive Warm Light", new Vector3(-5f, 2.2f, 2f), new Color(1f, 0.38f, 0.15f), 3.2f, 9f, root);
 
-            var archiveOperator = (GameObject)PrefabUtility.InstantiatePrefab(operatorPrefab);
-            archiveOperator.name = "ArchiveOperator // Detailed Armor Preview";
+            var archiveOperator = CreateRiggedCharacter(CobaltCharacterFbx, "ArchiveOperator // Skeletal Preview", root, 2.55f, animatorController);
+            var fittedOperatorY = archiveOperator == null ? 0f : archiveOperator.transform.position.y;
+            if (archiveOperator == null)
+            {
+                archiveOperator = (GameObject)PrefabUtility.InstantiatePrefab(operatorPrefab);
+                foreach (var behaviour in archiveOperator.GetComponents<MonoBehaviour>()) behaviour.enabled = false;
+            }
             archiveOperator.transform.SetParent(root);
-            archiveOperator.transform.position = new Vector3(3.6f, 0.08f, 1.2f);
+            archiveOperator.transform.position = new Vector3(3.6f, fittedOperatorY + 0.08f, 1.2f);
             archiveOperator.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-            archiveOperator.transform.localScale = Vector3.one * 1.08f;
-            foreach (var behaviour in archiveOperator.GetComponents<MonoBehaviour>()) behaviour.enabled = false;
 
             for (var i = 0; i < weapons.Count; i++)
             {
@@ -379,6 +405,9 @@ namespace Web3Fps.GameFoundation.Editor
             held.transform.localRotation = Quaternion.Euler(2f, -90f, 0f);
             held.transform.localScale = Vector3.one * 0.72f;
             CreateFirstPersonArms(aimSource, palette);
+            var viewMagazine = FindDescendant(held.transform, "Magazine");
+            var weaponPresentation = held.AddComponent<FirstPersonWeaponPresentation>();
+            weaponPresentation.Configure(playerWeapon, playerLook, held.transform, viewMagazine);
             var visualMuzzle = new GameObject("ViewModelMuzzle").transform;
             visualMuzzle.SetParent(aimSource, false);
             visualMuzzle.localPosition = new Vector3(0.31f, -0.2f, 1.48f);
@@ -401,6 +430,126 @@ namespace Web3Fps.GameFoundation.Editor
             combatFx.Configure(playerWeapon, botController, visualMuzzle, palette["cobaltGlow"], palette["coralGlow"]);
 
             SaveGeneratedScene(scene, RelayScene);
+        }
+
+        private static void ConfigureCharacterImporter(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
+            if (importer == null) throw new InvalidOperationException("Missing skeletal character FBX: " + assetPath);
+            var changed = importer.animationType != ModelImporterAnimationType.Generic || !importer.importAnimation;
+            importer.animationType = ModelImporterAnimationType.Generic;
+            importer.importAnimation = true;
+            importer.importCameras = false;
+            importer.importLights = false;
+            if (changed) importer.SaveAndReimport();
+        }
+
+        private static RuntimeAnimatorController CreateCharacterAnimatorController(string fbxPath, string controllerPath)
+        {
+            var clips = AssetDatabase.LoadAllAssetsAtPath(fbxPath)
+                .OfType<AnimationClip>()
+                .Where(clip => !clip.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            if (clips.Length == 0) throw new InvalidOperationException("Skeletal character has no imported animation clips: " + fbxPath);
+
+            var controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            controller.AddParameter("Speed", AnimatorControllerParameterType.Float);
+            controller.AddParameter("Fire", AnimatorControllerParameterType.Trigger);
+            controller.AddParameter("Dead", AnimatorControllerParameterType.Bool);
+            var stateMachine = controller.layers[0].stateMachine;
+            var idle = stateMachine.AddState("Idle");
+            idle.motion = FindAnimationClip(clips, "Idle") ?? clips[0];
+            stateMachine.defaultState = idle;
+            var run = stateMachine.AddState("Run Carry");
+            run.motion = FindAnimationClip(clips, "Run_Carry") ?? FindAnimationClip(clips, "Run") ?? idle.motion;
+            var shoot = stateMachine.AddState("Shoot");
+            shoot.motion = FindAnimationClip(clips, "Shoot_OneHanded") ?? idle.motion;
+            var death = stateMachine.AddState("Death");
+            death.motion = FindAnimationClip(clips, "Death") ?? idle.motion;
+
+            var toRun = idle.AddTransition(run);
+            toRun.hasExitTime = false;
+            toRun.duration = 0.12f;
+            toRun.AddCondition(AnimatorConditionMode.Greater, 0.12f, "Speed");
+            var toIdle = run.AddTransition(idle);
+            toIdle.hasExitTime = false;
+            toIdle.duration = 0.14f;
+            toIdle.AddCondition(AnimatorConditionMode.Less, 0.08f, "Speed");
+            var toShoot = stateMachine.AddAnyStateTransition(shoot);
+            toShoot.hasExitTime = false;
+            toShoot.duration = 0.06f;
+            toShoot.AddCondition(AnimatorConditionMode.If, 0f, "Fire");
+            var shootToIdle = shoot.AddTransition(idle);
+            shootToIdle.hasExitTime = true;
+            shootToIdle.exitTime = 0.82f;
+            shootToIdle.duration = 0.08f;
+            var toDeath = stateMachine.AddAnyStateTransition(death);
+            toDeath.hasExitTime = false;
+            toDeath.duration = 0.1f;
+            toDeath.AddCondition(AnimatorConditionMode.If, 0f, "Dead");
+            var respawn = death.AddTransition(idle);
+            respawn.hasExitTime = false;
+            respawn.duration = 0.08f;
+            respawn.AddCondition(AnimatorConditionMode.IfNot, 0f, "Dead");
+            EditorUtility.SetDirty(controller);
+            return controller;
+        }
+
+        private static AnimationClip FindAnimationClip(IEnumerable<AnimationClip> clips, string name)
+        {
+            return clips.FirstOrDefault(clip =>
+                clip.name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                clip.name.EndsWith("|" + name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static GameObject CreateRiggedCharacter(
+            string fbxPath,
+            string name,
+            Transform parent,
+            float targetHeight,
+            RuntimeAnimatorController controller)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+            if (model == null) return null;
+            var instance = Object.Instantiate(model, parent);
+            instance.name = name;
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = Vector3.one;
+            var animator = instance.GetComponentInChildren<Animator>();
+            if (animator != null)
+            {
+                animator.runtimeAnimatorController = controller;
+                animator.applyRootMotion = false;
+                animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            }
+            FitCharacterToHeight(instance, targetHeight);
+            return instance;
+        }
+
+        private static void FitCharacterToHeight(GameObject character, float targetHeight)
+        {
+            var renderers = character.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0) return;
+            var bounds = renderers[0].bounds;
+            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            if (bounds.size.y <= 0.001f) return;
+            character.transform.localScale *= targetHeight / bounds.size.y;
+            bounds = renderers[0].bounds;
+            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+            character.transform.position += Vector3.up * (character.transform.parent.position.y - bounds.min.y);
+        }
+
+        private static Transform FindDescendant(Transform root, string name)
+        {
+            if (root == null) return null;
+            if (root.name.Equals(name, StringComparison.OrdinalIgnoreCase)) return root;
+            for (var i = 0; i < root.childCount; i++)
+            {
+                var found = FindDescendant(root.GetChild(i), name);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         private static void CreateRelayArena(Transform root, IReadOnlyDictionary<string, Material> palette)
