@@ -381,9 +381,10 @@ namespace Web3Fps.GameFoundation.Editor
 
             var spawnRoot = new GameObject("SpawnPoints").transform;
             spawnRoot.SetParent(root);
-            var playerSpawn = CreateSpawn("CobaltSpawn", new Vector3(-18f, 0f, 0f), Quaternion.LookRotation(Vector3.right), spawnRoot);
-            // Keep the first opponent visible instead of placing it directly behind the relay core.
-            var botSpawn = CreateSpawn("CoralSpawn", new Vector3(12f, 0f, 8f), Quaternion.LookRotation(new Vector3(-1f, 0f, -0.35f)), spawnRoot);
+            // Open on the north presentation lane so the opponent is unmistakably visible
+            // and cannot be confused with the central relay architecture.
+            var playerSpawn = CreateSpawn("CobaltSpawn", FormalCombatLayout.PlayerSpawn, Quaternion.LookRotation(Vector3.right), spawnRoot);
+            var botSpawn = CreateSpawn("CoralSpawn", FormalCombatLayout.BotSpawn, Quaternion.LookRotation(Vector3.left), spawnRoot);
             var player = (GameObject)PrefabUtility.InstantiatePrefab(playerSource);
             var bot = (GameObject)PrefabUtility.InstantiatePrefab(botSource);
             player.name = "CobaltOperator";
@@ -623,19 +624,19 @@ namespace Web3Fps.GameFoundation.Editor
 
             var relay = new GameObject("CentralProofRelay").transform;
             relay.SetParent(arena);
-            CreatePrimitive("RelayPlinth", PrimitiveType.Cylinder, new Vector3(0f, 0.35f, 0f), new Vector3(3.5f, 0.35f, 3.5f), palette["slate"], relay);
-            CreatePrimitive("RelayCore", PrimitiveType.Cylinder, new Vector3(0f, 3.1f, 0f), new Vector3(1.15f, 3.1f, 1.15f), palette["bone"], relay);
-            CreatePrimitive("DataSpine", PrimitiveType.Cylinder, new Vector3(0f, 4.4f, 0f), new Vector3(0.38f, 4.4f, 0.38f), palette["aurora"], relay);
+            CreatePrimitive("RelayPlinth", PrimitiveType.Cylinder, new Vector3(0f, 0.25f, 0f), new Vector3(2.4f, 0.25f, 2.4f), palette["slate"], relay);
+            CreatePrimitive("RelayCore", PrimitiveType.Cylinder, new Vector3(0f, 1.6f, 0f), new Vector3(0.7f, 1.6f, 0.7f), palette["bone"], relay);
+            CreatePrimitive("DataSpine", PrimitiveType.Cylinder, new Vector3(0f, 2.5f, 0f), new Vector3(0.18f, 2.5f, 0.18f), palette["aurora"], relay);
             for (var i = 0; i < 4; i++)
             {
                 var angle = i * 90f;
                 var radians = angle * Mathf.Deg2Rad;
-                var p = new Vector3(Mathf.Cos(radians) * 2.5f, 2.3f, Mathf.Sin(radians) * 2.5f);
-                CreatePart("RelayFin_" + i, p, new Vector3(0.3f, 3.8f, 1.3f), palette["copper"], relay, new Vector3(0f, -angle, 0f));
+                var p = new Vector3(Mathf.Cos(radians) * 1.65f, 1.3f, Mathf.Sin(radians) * 1.65f);
+                CreatePart("RelayFin_" + i, p, new Vector3(0.18f, 2f, 0.7f), palette["copper"], relay, new Vector3(0f, -angle, 0f));
             }
-            CreatePart("RelayHaloA", new Vector3(0f, 6.5f, 0f), new Vector3(8f, 0.12f, 0.26f), palette["aurora"], relay);
-            CreatePart("RelayHaloB", new Vector3(0f, 6.5f, 0f), new Vector3(0.26f, 0.12f, 8f), palette["aurora"], relay);
-            CreatePointLight("RelayGlow", new Vector3(0f, 5.2f, 0f), new Color(0.2f, 1f, 0.72f), 6.5f, 16f, relay);
+            CreatePart("RelayHaloA", new Vector3(0f, 4f, 0f), new Vector3(4f, 0.08f, 0.16f), palette["aurora"], relay);
+            CreatePart("RelayHaloB", new Vector3(0f, 4f, 0f), new Vector3(0.16f, 0.08f, 4f), palette["aurora"], relay);
+            CreatePointLight("RelayGlow", new Vector3(0f, 3f, 0f), new Color(0.2f, 1f, 0.72f), 3.2f, 8f, relay);
 
             CreateExteriorTower("NorthWestArchive", new Vector3(-18f, 0f, 18f), 9f, palette, arena);
             CreateExteriorTower("NorthEastArchive", new Vector3(18f, 0f, 18f), 12f, palette, arena);

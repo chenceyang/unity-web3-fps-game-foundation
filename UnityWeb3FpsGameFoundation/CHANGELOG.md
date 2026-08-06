@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.3 - 2026-08-07
+
+- Correctly identified the apparent giant as the 7.6-metre central relay architecture, not the 1.9-metre skeletal enemy.
+- Moved both opening spawns onto a clear north lane so the Coral operator is centered and visible immediately without relay or cover occlusion.
+- Reduced the relay silhouette and glow to a readable map objective instead of a character-like screen-dominating structure.
+- Added opening-lane clearance regression coverage; the static audit now passes 45 tests.
+
 ## 1.6.2 - 2026-08-07
 
 - Rebalanced the first-person view model so temporary arm blockouts no longer dominate the camera or resemble malformed characters.
