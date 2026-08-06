@@ -1,5 +1,16 @@
 # Unity 集成检查单
 
+## 本地 Prototype v1.1
+
+- [x] 提供 Unity 菜单生成可编辑的 Prototype 场景。
+- [x] 生成玩家与机器人 Prefab、竞技场、出生点和基础材质。
+- [x] 接通移动、视角、射击、伤害、死亡和两秒复活。
+- [x] 接通目标击杀数、倒计时、胜负/平局、HUD 和 R 重开。
+- [x] 对局结束生成本地 `MatchResult`，但不自动发布或发奖。
+- [x] 使用 Unity 6000.3.21f1 引用程序集编译 Runtime、Editor、Tests，并静态执行 20 个测试全部通过。
+- [ ] 在 Unity 6000.3.21f1 重新编译 v1.1，运行 EditMode 测试并手工完成一局。
+- [ ] 确认生成场景在目标渲染管线和目标输入配置下正常运行。
+
 ## 大厅
 
 - [ ] 创建并持久化 `GameFoundationBootstrap`。

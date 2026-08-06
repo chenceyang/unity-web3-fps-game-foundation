@@ -14,6 +14,12 @@ namespace Web3Fps.GameFoundation.Gameplay
 
         public void SetLookDelta(Vector2 delta) => _lookDelta = delta;
 
+        public void Configure(Transform pivot, float lookSensitivity = 0.12f)
+        {
+            pitchPivot = pivot;
+            sensitivity = Mathf.Max(0.01f, lookSensitivity);
+        }
+
         public void Simulate()
         {
             transform.Rotate(0f, _lookDelta.x * sensitivity, 0f, Space.Self);

@@ -1,6 +1,6 @@
 {
   "name": "com.web3fps.game-foundation",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "displayName": "Web3 FPS Game Foundation",
   "description": "Unity game-side foundation for a server-authoritative FPS with NFT assets, rewards, tournaments and match attestations.",
   "unity": "2022.3",
@@ -17,8 +17,13 @@
   "samples": [
     {
       "displayName": "Bootstrap Example",
-      "description": "Mock bootstrap scripts only; no scene, prefab or UI is included.",
+      "description": "Minimal composition root using the mock backend.",
       "path": "Samples~/Bootstrap"
+    },
+    {
+      "displayName": "Playable Local Prototype",
+      "description": "Instructions for generating the editable offline FPS scene and prefabs.",
+      "path": "Samples~/PlayablePrototype"
     }
   ]
 }

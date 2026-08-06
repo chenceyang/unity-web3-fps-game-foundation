@@ -7,7 +7,7 @@
 - `UnityWeb3FpsGameFoundation/`：唯一可编辑的包源码。
 - `UnityWeb3FpsGameFoundation/README.md`：包安装、接口和集成合同。
 - `UnityWeb3FpsGameFoundation/Documentation/INTEGRATION_CHECKLIST.md`：尚未完成的游戏/服务器接入清单。
-- `outputs/UnityWeb3FpsGameFoundation_v1.0.zip`：由包源码生成的分发产物，不是编辑源。
+- `outputs/UnityWeb3FpsGameFoundation_v1.1.zip`：由包源码生成的当前分发产物，不是编辑源。
 - `tools/build_game_design_doc.py`：需求文档 DOCX 的可复现生成器。
 - `references/`：带来源和哈希说明的上游只读快照。
 - `work/`：一次性编译审计与 PDF 检查产物，不是项目事实来源。
@@ -18,14 +18,17 @@
 - `com.unity.test-framework 1.6.0` 与 `com.unity.ext.nunit 2.0.5` 已在当前集成工程解析。
 - 纯 C# Keccak/结果序列化审计通过，Unity API 语法审计为 0 错误、0 警告。
 - 已实现 Mock/HTTP 资产网关、钱包/奖励轮询、loadout 校验、赛事交易意图、结果哈希、AssetBundle 内容校验，以及基础移动/射击/伤害组件。
-- 当前集成工程中的 `Prototype` 场景只有相机和方向光，尚不是可玩的 FPS 场景。
+- v1.1 已加入本地可玩 Prototype 的场景/Prefab 生成器、机器人、复活、比分、倒计时、胜负和 HUD；
+  尚待在 Unity `6000.3.21f1` 重新编译并手工完成一局。
+- v1.1 Runtime、Editor 和 Tests 程序集已使用 Unity 6000.3.21f1 的 Roslyn/引用程序集独立编译；
+  20 个 EditMode 测试已由静态执行器运行并全部通过。完整 Unity 批处理验证被 Licensing Client 阻塞。
 
 ## 尚未完成
 
 - 大厅、衣柜、钱包、奖励、赛事、市场和赛后 UI。
-- 玩家 Prefab、地图、死亡/复活、比分/胜负和完整本地对局。
+- 生产级玩家 Prefab、正式地图、武器表现和内容资产；生成式本地 Prototype 已有，但尚未实机复验。
 - 具体联网 SDK、权威服务器适配、断线重连与资产 snapshot。
 - 后端 entitlement-check、存证队列、奖励幂等链路及端到端联调。
 - 需求文档中的 14 项端到端验收；现有测试仅覆盖底层组件。
 
-下一阶段按“可玩本地垂直切片 → Web3 游戏侧控制器/UI → 联网与服务器边界 → 端到端验收”推进。不要把包成功编译等同于完整游戏已经完成。
+下一阶段先完成 v1.1 Unity 编译与一局实机验收，再按“Web3 游戏侧控制器/UI → 联网与服务器边界 → 端到端验收”推进。不要把生成器或包成功编译等同于完整游戏已经完成。

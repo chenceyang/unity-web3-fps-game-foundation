@@ -18,7 +18,17 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
 
         public event Action<ShotResult> ShotResolved;
 
-        private void Awake()
+        private void Awake() => ResolveSink();
+
+        public void Configure(string playerId, Transform muzzleTransform, MonoBehaviour commandSink)
+        {
+            shooterId = string.IsNullOrWhiteSpace(playerId) ? "local-player" : playerId;
+            muzzle = muzzleTransform;
+            shotSink = commandSink;
+            ResolveSink();
+        }
+
+        private void ResolveSink()
         {
             _sink = shotSink as IShotCommandSink;
             if (_sink == null) Debug.LogError("HitscanWeapon requires a component implementing IShotCommandSink", this);

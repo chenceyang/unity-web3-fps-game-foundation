@@ -1,0 +1,18 @@
+{
+  "name": "Web3Fps.GameFoundation.Editor",
+  "rootNamespace": "Web3Fps.GameFoundation.Editor",
+  "references": [
+    "Web3Fps.GameFoundation"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

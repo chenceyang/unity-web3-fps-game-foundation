@@ -14,6 +14,7 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 - 钱包/奖励协调器：系统浏览器跳转、可取消轮询、终态与超时处理。
 - 赛事网关：列表、详情、报名、赞助、领奖、退款和交易确认。
 - FPS 核心：输入帧、CharacterController 移动、第一人称视角、命中指令、权威射线结算、生命值。
+- 可玩本地 Prototype：一键生成玩家/机器人 Prefab、测试竞技场、死亡复活、比分、倒计时、胜负和 HUD。
 - 比赛核心：服务器状态机、比分记录、名次生成、固定 MatchResult 数据结构。
 - 存证数据：确定性 JSON、Ethereum `keccak256`、`matchIdKey` 与 `resultHash`。
 - 资产完整性：下载 AssetBundle 后验证链上 `contentHash`，失败返回可降级结果。
@@ -34,11 +35,23 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 }
 ```
 
-在 Package Manager 中导入 `Bootstrap Example` 可获得最小 Mock 示例脚本。该 Sample 不包含场景、
-Prefab 或 UI，导入后不能直接作为完整游戏运行。
+在 Package Manager 中可导入 `Bootstrap Example` 获得最小 Mock 示例，也可导入
+`Playable Local Prototype` 获取本地对局生成说明。
 
 包内含 EditMode 测试。当前 Unity 6.3 验证工程使用 `com.unity.test-framework 1.6.0` 和
 `com.unity.ext.nunit 2.0.5`；若项目未安装 Test Framework，测试源码会因找不到 NUnit 类型而无法编译。
+
+## 可玩本地 Prototype
+
+1. 在 Unity 菜单执行 `Tools > Web3 FPS > Create Local Prototype Scene`。
+2. 生成器会创建 `Assets/Web3FpsPrototype/Prototype.unity`、玩家/机器人 Prefab 和基础材质。
+3. 打开生成场景并按 Play。
+
+操作：WASD 移动、Shift 冲刺、Space 跳跃、鼠标瞄准、左键射击、Escape 释放/锁定鼠标；
+结算后按 R 重开。规则为三分钟内率先击杀 5 次获胜，包含两秒复活、倒计时、平局和 MatchResult 生成。
+
+该场景只验证离线游戏循环，使用 `LocalAuthoritativeShotSink`。生产联网版本必须替换为权威服务器适配器；
+本地命中、比分和结果不能直接作为链上或奖励事实。
 
 ## 最小启动
 
@@ -104,12 +117,15 @@ Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITo
 在 Unity Test Runner 中运行 `EditMode` 测试。没有 Unity 编辑器时，可用仓库根目录的纯 C#
 审计工程验证 Keccak、比赛结果与服务层；UnityEngine 组件仍需在编辑器中完成最终编译和场景测试。
 
-截至 2026-08-06，运行时程序集和测试程序集已在 Unity 6000.3.21f1 编译；纯 C# 审计通过。
-尚未记录一次完整 Unity Test Runner 运行结果，也未完成场景、联网或真实后端的端到端验收。
+截至 2026-08-06，v1.0 运行时程序集和测试程序集已在 Unity 6000.3.21f1 编译；纯 C# 审计通过。
+v1.1 新增 Prototype 生成器和 `LocalDeathmatchRulesTests`，仍需重新导入 Unity 并记录完整 Test Runner
+与 Play Mode 实机结果。仓库的静态审计脚本已使用 Unity 6000.3.21f1 自带 Roslyn 编译 Runtime、
+Editor 和 Tests 三个程序集，并执行 20 个测试全部通过；该结果不替代 Unity Editor/Test Runner。
+联网和真实后端的端到端验收尚未完成。
 
 ## 明确不包含
 
-- 场景、Prefab、动画、美术和 UI；
+- 生产地图、动画、美术、完整大厅/Web3 UI（仅包含生成式本地 Prototype 和调试 HUD）；
 - 具体联机 SDK 的传输层；
 - 反作弊算法、账号后端和链交易服务；
 - 武器/地图/模式数值平衡；
