@@ -8,7 +8,7 @@
 - `UnityWeb3FpsGameFoundation/README.md`：包安装、接口和集成合同。
 - `UnityWeb3FpsGameFoundation/Documentation/INTEGRATION_CHECKLIST.md`：尚未完成的游戏/服务器接入清单。
 - `UnityWeb3FpsGameFoundation/Documentation/FORMAL_CONTENT_DESIGN.md`：正式 UI、美术、地图、武器与 Web3 创意的制作规格。
-- `outputs/UnityWeb3FpsGameFoundation_v1.6.zip`：由包源码生成的当前分发产物，不是编辑源。
+- `outputs/UnityWeb3FpsGameFoundation_v1.6.1.zip`：由包源码生成的当前分发产物，不是编辑源。
 - `tools/build_game_design_doc.py`：需求文档 DOCX 的可复现生成器。
 - `references/`：带来源和哈希说明的上游只读快照。
 - `work/`：一次性编译审计与 PDF 检查产物，不是项目事实来源。
@@ -31,6 +31,7 @@
   正式 HUD 改为低干扰生存 FPS 信息布局，大厅和第一人称角色模型增加装甲细节；静态编译通过，39 个测试全部通过。
 - v1.6 已导入两套 CC0 骨骼士兵 FBX 及 Idle/Walk/Run/Shoot/Jump/Death 动画，加入 Animator 状态机、
   第一人称换弹、弹匣运动、枪械/相机后坐力和原创程序化射击音效；静态编译通过，41 个测试全部通过。
+- v1.6.1 将敌人出生点移出中央实体遮挡区，增加轻量绕障和敌方识别灯，并缩小遮挡视线的第一人称手臂；静态审计 43/43 通过。
 
 ## 尚未完成
 

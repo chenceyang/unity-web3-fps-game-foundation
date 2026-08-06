@@ -19,6 +19,7 @@ namespace Web3Fps.GameFoundation.Prototype
         private CharacterController _controller;
         private Health _health;
         private double _nextAttackAt;
+        private float _avoidanceSide;
 
         public event Action<Vector3, Vector3, bool> ShotResolved;
 
@@ -35,6 +36,7 @@ namespace Web3Fps.GameFoundation.Prototype
         {
             _controller = GetComponent<CharacterController>();
             _health = GetComponent<Health>();
+            if (Mathf.Approximately(_avoidanceSide, 0f)) _avoidanceSide = GetInstanceID() % 2 == 0 ? 1f : -1f;
         }
 
         private void Update()
@@ -46,16 +48,38 @@ namespace Web3Fps.GameFoundation.Prototype
             var flatOffset = Vector3.ProjectOnPlane(offset, Vector3.up);
             if (flatOffset.sqrMagnitude > 0.01f)
             {
-                var direction = flatOffset.normalized;
+                var desiredDirection = flatOffset.normalized;
+                var pathBlocked = IsPathBlocked(desiredDirection);
+                var direction = PrototypeBotSteering.Resolve(desiredDirection, pathBlocked, _avoidanceSide);
                 transform.rotation = Quaternion.RotateTowards(
                     transform.rotation,
                     Quaternion.LookRotation(direction, Vector3.up),
                     360f * Time.deltaTime);
-                if (flatOffset.magnitude > attackRange * 0.65f)
+                if (flatOffset.magnitude > attackRange * 0.65f || pathBlocked)
                     _controller.SimpleMove(direction * moveSpeed);
             }
 
             if (offset.sqrMagnitude <= attackRange * attackRange) TryAttack();
+        }
+
+        private bool IsPathBlocked(Vector3 direction)
+        {
+            if (_controller == null) return false;
+            var origin = transform.position + Vector3.up * Mathf.Max(0.45f, _controller.radius);
+            var hits = Physics.SphereCastAll(
+                origin,
+                _controller.radius * 0.72f,
+                direction,
+                1.35f,
+                sightMask,
+                QueryTriggerInteraction.Ignore);
+            foreach (var hit in hits)
+            {
+                var participant = hit.collider.GetComponentInParent<PrototypeParticipant>();
+                if (participant == self || participant == target) continue;
+                return true;
+            }
+            return false;
         }
 
         private void TryAttack()

@@ -381,7 +381,8 @@ namespace Web3Fps.GameFoundation.Editor
             var spawnRoot = new GameObject("SpawnPoints").transform;
             spawnRoot.SetParent(root);
             var playerSpawn = CreateSpawn("CobaltSpawn", new Vector3(-18f, 0f, 0f), Quaternion.LookRotation(Vector3.right), spawnRoot);
-            var botSpawn = CreateSpawn("CoralSpawn", new Vector3(18f, 0f, 0f), Quaternion.LookRotation(Vector3.left), spawnRoot);
+            // Keep the first opponent visible instead of placing it directly behind the relay core.
+            var botSpawn = CreateSpawn("CoralSpawn", new Vector3(15f, 0f, 7.5f), Quaternion.LookRotation(new Vector3(-1f, 0f, -0.3f)), spawnRoot);
             var player = (GameObject)PrefabUtility.InstantiatePrefab(playerSource);
             var bot = (GameObject)PrefabUtility.InstantiatePrefab(botSource);
             player.name = "CobaltOperator";
@@ -416,6 +417,7 @@ namespace Web3Fps.GameFoundation.Editor
             var botController = bot.GetComponent<PrototypeBotController>();
             botParticipant.Configure("prototype-bot", "Coral", "coral", botSpawn, new MonoBehaviour[] { botController });
             botController.Configure(botParticipant, playerParticipant);
+            CreateVisualPrimitive("CoralTargetBeacon", PrimitiveType.Cube, new Vector3(0f, 2.62f, 0f), new Vector3(0.13f, 0.13f, 0.13f), palette["coralGlow"], bot.transform, new Vector3(0f, 45f, 45f));
 
             var systems = new GameObject("RiftRelaySystems");
             systems.transform.SetParent(root);
@@ -747,6 +749,8 @@ namespace Web3Fps.GameFoundation.Editor
         {
             var rig = new GameObject("FirstPersonArms").transform;
             rig.SetParent(camera, false);
+            rig.localPosition = new Vector3(0f, -0.04f, 0.12f);
+            rig.localScale = Vector3.one * 0.52f;
             CreateVisualPrimitive("LeftSleeve", PrimitiveType.Capsule, new Vector3(-0.23f, -0.38f, 0.6f), new Vector3(0.13f, 0.34f, 0.13f), palette["graphite"], rig, new Vector3(68f, 0f, -16f));
             CreateVisualPrimitive("RightSleeve", PrimitiveType.Capsule, new Vector3(0.25f, -0.39f, 0.63f), new Vector3(0.13f, 0.36f, 0.13f), palette["graphite"], rig, new Vector3(66f, 0f, 15f));
             CreateVisualPrimitive("LeftForearmArmor", PrimitiveType.Cube, new Vector3(-0.18f, -0.31f, 0.73f), new Vector3(0.18f, 0.28f, 0.18f), palette["armor"], rig, new Vector3(18f, 0f, -10f));

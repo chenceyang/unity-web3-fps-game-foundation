@@ -1,6 +1,6 @@
 {
   "name": "com.web3fps.game-foundation",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "displayName": "Web3 FPS Game Foundation",
   "description": "Unity game-side foundation for a server-authoritative FPS with NFT assets, rewards, tournaments and match attestations.",
   "unity": "2022.3",

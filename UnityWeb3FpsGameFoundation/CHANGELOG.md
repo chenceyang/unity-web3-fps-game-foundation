@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1 - 2026-08-07
+
+- Moved the Coral bot spawn out from behind the solid relay core and added lightweight obstacle steering so it remains visible and can pursue the player.
+- Added a coral enemy-identification beacon and reduced the generated first-person arm scale to preserve the combat sightline.
+- Added steering coverage; the static audit now passes 43 tests.
+
 ## 1.6.0 - 2026-08-07
 
 - Imported two commercial-use CC0 skeletal low-poly soldier FBX assets with embedded idle, locomotion, shooting, jump and death animation clips.
