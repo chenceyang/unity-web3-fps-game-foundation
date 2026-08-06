@@ -16,6 +16,7 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 - FPS 核心：输入帧、CharacterController 移动、第一人称视角、命中指令、权威射线结算、生命值。
 - 可玩本地 Prototype：一键生成玩家/机器人 Prefab、测试竞技场、死亡复活、比分、倒计时、胜负和 HUD。
 - Web3 大厅：一键生成 Mock 场景，展示钱包、confirmed NFT loadout、奖励和赛事操作及安全降级状态。
+- ASH//LEDGER 正式垂直切片：一键生成 UI Toolkit 大厅、RIFT RELAY 地图、正式战斗 HUD 与三把可编辑武器灰盒 Prefab。
 - 比赛核心：服务器状态机、比分记录、名次生成、固定 MatchResult 数据结构。
 - 服务器边界：开局前 entitlement-check、不可变 loadout 快照、失败默认皮肤和权威对局会话。
 - 存证数据：确定性 JSON、Ethereum `keccak256`、`matchIdKey` 与 `resultHash`。
@@ -55,6 +56,16 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 
 该场景只验证离线游戏循环，使用 `LocalAuthoritativeShotSink`。生产联网版本必须替换为权威服务器适配器；
 本地命中、比分和结果不能直接作为链上或奖励事实。
+
+## ASH//LEDGER 正式垂直切片
+
+1. 在 Unity 菜单执行 `Tools > Web3 FPS > Create ASH LEDGER Vertical Slice`。
+2. 生成器会创建 `Assets/AshLedgerVerticalSlice/`，并自动打开 `Scenes/AshLedgerLobby.unity`。
+3. 按 Play，在大厅点击 `DEPLOY TO RIFT RELAY` 进入正式风格的本地对局。
+
+生成内容包括 UI Toolkit 正式大厅、Mock Web3 状态绑定、战斗 HUD、RIFT RELAY 三路灰盒地图，以及
+KESTREL-7、PULSE-9、RELAY-3 三把武器 Prefab。所有生成资产都位于项目 `Assets` 下，可继续编辑。
+这里的武器模型、角色和地图仍是制作灰盒；概念图是视觉目标，不会作为全屏贴图覆盖场景。
 
 ## Web3 大厅
 
@@ -149,15 +160,15 @@ Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITo
 审计工程验证 Keccak、比赛结果与服务层；UnityEngine 组件仍需在编辑器中完成最终编译和场景测试。
 
 截至 2026-08-06，v1.0 运行时程序集和测试程序集已在 Unity 6000.3.21f1 编译；纯 C# 审计通过。
-v1.3 新增 Prototype/Web3 Lobby 生成器、权威服务器开局/发布边界及对应 EditMode 测试，仍需重新
-导入 Unity 并记录完整 Test Runner 与 Play Mode 实机结果。仓库的静态审计脚本已使用 Unity
-6000.3.21f1 自带 Roslyn 编译 Runtime、Editor 和 Tests 三个程序集，并执行 32 个测试全部通过；
+v1.4 新增 ASH//LEDGER 正式垂直切片生成器、内容目录和 UI Toolkit 表现，仍需在 Unity 中生成后记录
+完整 Test Runner 与 Play Mode 实机结果。仓库的静态审计脚本已使用 Unity 6000.3.21f1 自带 Roslyn
+编译 Runtime、Editor 和 Tests 三个程序集，并执行 35 个测试全部通过；
 该结果不替代 Unity Editor/Test Runner。
 联网和真实后端的端到端验收尚未完成。
 
 ## 明确不包含
 
-- 生产地图、动画、美术和正式 UI 视觉系统（仅包含生成式 Prototype/Web3 大厅和 IMGUI 调试界面）；
+- 最终生产地图、角色动画、高精度美术和完整前端页面（v1.4 已包含首个正式风格灰盒垂直切片）；
 - 具体联机 SDK 的传输层；
 - 反作弊算法、账号后端、真实 entitlement 服务、持久化存证队列和链交易服务；
 - 武器/地图/模式数值平衡；

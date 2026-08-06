@@ -1,0 +1,82 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="AshLedgerLobby.uss" />
+    <ui:VisualElement class="screen">
+        <ui:VisualElement class="topbar">
+            <ui:VisualElement>
+                <ui:Label text="ASH//LEDGER" class="brand" />
+                <ui:Label text="VERTICAL SLICE // UNITY 6" class="eyebrow" />
+            </ui:VisualElement>
+            <ui:VisualElement class="topbar-status">
+                <ui:Label name="status-label" text="INITIALIZING GAME FOUNDATION…" class="status" />
+                <ui:Label name="wallet-label" text="GUEST // OPTIONAL WALLET" class="wallet" />
+                <ui:Button name="refresh-button" text="REFRESH" class="quiet-button" />
+                <ui:Button name="wallet-button" text="BIND OPTIONAL WALLET" class="quiet-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="body">
+            <ui:VisualElement class="rail">
+                <ui:Button name="nav-play" text="PLAY" class="nav-button nav-primary" />
+                <ui:Button name="nav-arsenal" text="ARSENAL" class="nav-button" />
+                <ui:Button name="nav-vault" text="VAULT" class="nav-button" />
+                <ui:Button name="nav-tournaments" text="TOURNAMENTS" class="nav-button" />
+                <ui:Button name="nav-profile" text="PROFILE" class="nav-button" />
+                <ui:VisualElement class="rail-spacer" />
+                <ui:Label text="WEB3 OPERATIONS NEVER RUN DURING COMBAT." class="rail-note" />
+            </ui:VisualElement>
+            <ui:VisualElement class="content">
+                <ui:VisualElement name="panel-play" class="page">
+                    <ui:Label text="RIFT RELAY" class="hero-title" />
+                    <ui:Label text="4V4 // RELAY CONTROL READY" class="hero-subtitle" />
+                    <ui:VisualElement class="hero-spacer" />
+                    <ui:VisualElement class="hero-card">
+                        <ui:Label text="PUBLIC ARCHIVE STATUS" class="section-title" />
+                        <ui:Label name="proof-feed-label" text="MATCH VERIFICATION RUNS ASYNCHRONOUSLY." class="body-copy" />
+                    </ui:VisualElement>
+                    <ui:Button name="play-button" text="DEPLOY TO RIFT RELAY" class="deploy-button" />
+                </ui:VisualElement>
+                <ui:VisualElement name="panel-arsenal" class="page">
+                    <ui:Label text="ARSENAL // CORE LOADOUT" class="page-title" />
+                    <ui:Label text="KESTREL-7  /  PULSE-9  /  RELAY-3" class="page-kicker" />
+                    <ui:VisualElement class="weapon-strip">
+                        <ui:VisualElement class="weapon-card"><ui:Label text="KESTREL-7" class="weapon-name" /><ui:Label text="RIFLE // 12–32M" class="card-detail" /></ui:VisualElement>
+                        <ui:VisualElement class="weapon-card"><ui:Label text="PULSE-9" class="weapon-name" /><ui:Label text="SMG // 5–18M" class="card-detail" /></ui:VisualElement>
+                        <ui:VisualElement class="weapon-card"><ui:Label text="RELAY-3" class="weapon-name" /><ui:Label text="PISTOL // 4–20M" class="card-detail" /></ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label text="NFT FINISHES PRESERVE DAMAGE, RECOIL, HITBOX, TIMING AND SILHOUETTE." class="safety-note" />
+                </ui:VisualElement>
+                <ui:ScrollView name="panel-vault" class="page scroll-page">
+                    <ui:Label text="VAULT // VERIFIED RELICS" class="page-title" />
+                    <ui:Label text="OWNERSHIP, SERIAL, SEASON AND WEAR — NEVER COMBAT POWER" class="page-kicker" />
+                    <ui:VisualElement name="asset-list" class="data-list" />
+                    <ui:Label text="PENDING REWARDS" class="section-title section-gap" />
+                    <ui:VisualElement name="reward-list" class="data-list" />
+                </ui:ScrollView>
+                <ui:ScrollView name="panel-tournaments" class="page scroll-page">
+                    <ui:Label text="TOURNAMENTS // TRANSPARENT POOLS" class="page-title" />
+                    <ui:Label text="REGISTRATION AND CLAIMS OPEN IN THE SYSTEM BROWSER" class="page-kicker" />
+                    <ui:VisualElement name="tournament-list" class="data-list" />
+                </ui:ScrollView>
+                <ui:VisualElement name="panel-profile" class="page">
+                    <ui:Label text="PROFILE // PUBLIC PROOFS" class="page-title" />
+                    <ui:VisualElement class="proof-card">
+                        <ui:Label text="NO ATTESTED MATCHES IN MOCK MODE" class="card-title" />
+                        <ui:Label text="Final scores remain available while public verification is pending or degraded." class="body-copy" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="right-rail">
+                <ui:Label text="SEASON 01" class="section-title" />
+                <ui:Label text="ORBITAL REMNANT" class="page-kicker" />
+                <ui:VisualElement class="right-card">
+                    <ui:Label text="REWARD TRACK" class="card-title" />
+                    <ui:Label text="12 // VERIFIED FINISH" class="card-detail" />
+                    <ui:VisualElement class="progress"><ui:VisualElement class="progress-fill" /></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="right-card">
+                    <ui:Label text="ARCHIVE FEED" class="card-title" />
+                    <ui:Label text="Service degradation never disables ordinary matchmaking." class="body-copy" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

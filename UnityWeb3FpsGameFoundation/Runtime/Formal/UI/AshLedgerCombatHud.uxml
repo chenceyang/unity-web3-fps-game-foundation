@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="AshLedgerCombatHud.uss" />
+    <ui:VisualElement class="hud">
+        <ui:VisualElement class="scorebar">
+            <ui:Label name="score-label" text="COBALT  0  //  0  CORAL" class="score" />
+            <ui:Label name="timer-label" text="03:00" class="timer" />
+            <ui:Label text="RIFT RELAY" class="map" />
+        </ui:VisualElement>
+        <ui:Label text="+" class="crosshair" />
+        <ui:VisualElement class="health-panel">
+            <ui:Label text="VITAL" class="micro" />
+            <ui:Label name="health-label" text="100" class="health-number" />
+            <ui:VisualElement class="health-track"><ui:VisualElement name="health-fill" class="health-fill" /></ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label text="WASD MOVE   //   SHIFT SPRINT   //   SPACE JUMP   //   LMB FIRE   //   ESC CURSOR" class="controls" />
+        <ui:VisualElement name="result-panel" class="result-panel">
+            <ui:Label name="result-title" text="VICTORY" class="result-title" />
+            <ui:Label text="LOCAL RESULT SAVED // PRESS R TO REDEPLOY" class="result-copy" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

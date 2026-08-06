@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0 - 2026-08-06
+
+- Added a one-click ASH//LEDGER vertical-slice generator with a formal UI Toolkit lobby and combat HUD.
+- Added the editable RIFT RELAY three-lane arena blockout and KESTREL-7, PULSE-9 and RELAY-3 weapon prefabs.
+- Connected mock wallet, NFT, reward and tournament state to the formal lobby without placing Web3 work in combat.
+- Added formal content catalog tests; the static Unity audit now passes 35 tests.
+
 ## 1.3.1 - 2026-08-06
 
 - Added the formal UI, art direction, launch-map, weapon-content and Web3 creativity specification.

@@ -14,6 +14,8 @@ namespace Web3Fps.GameFoundation.Prototype
         [SerializeField, Min(1)] private int targetKills = 5;
         [SerializeField, Min(10f)] private float durationSeconds = 180f;
         [SerializeField, Min(0f)] private float respawnDelay = 2f;
+        [SerializeField] private string modeId = "prototype-deathmatch";
+        [SerializeField] private string mapId = "prototype-arena";
 
         private LocalDeathmatchRules _rules;
         private MatchCoordinator _coordinator;
@@ -32,13 +34,17 @@ namespace Web3Fps.GameFoundation.Prototype
             PrototypeParticipant opponent,
             int killsToWin = 5,
             float matchDurationSeconds = 180f,
-            float deathRespawnDelay = 2f)
+            float deathRespawnDelay = 2f,
+            string configuredModeId = "prototype-deathmatch",
+            string configuredMapId = "prototype-arena")
         {
             player = localPlayer;
             bot = opponent;
             targetKills = Mathf.Max(1, killsToWin);
             durationSeconds = Mathf.Max(10f, matchDurationSeconds);
             respawnDelay = Mathf.Max(0f, deathRespawnDelay);
+            modeId = string.IsNullOrWhiteSpace(configuredModeId) ? "prototype-deathmatch" : configuredModeId;
+            mapId = string.IsNullOrWhiteSpace(configuredMapId) ? "prototype-arena" : configuredMapId;
         }
 
         private void Start()
@@ -85,8 +91,8 @@ namespace Web3Fps.GameFoundation.Prototype
             _startedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             _coordinator.Start(
                 "local-" + Guid.NewGuid().ToString("N"),
-                "prototype-deathmatch",
-                "prototype-arena",
+                modeId,
+                mapId,
                 Application.version,
                 _startedAt);
             LastResult = null;

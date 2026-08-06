@@ -1,6 +1,6 @@
 {
   "name": "com.web3fps.game-foundation",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "displayName": "Web3 FPS Game Foundation",
   "description": "Unity game-side foundation for a server-authoritative FPS with NFT assets, rewards, tournaments and match attestations.",
   "unity": "2022.3",
@@ -29,6 +29,11 @@
       "displayName": "Web3 Lobby",
       "description": "Instructions for generating the mock-backed wallet, NFT, reward and tournament lobby.",
       "path": "Samples~/Web3Lobby"
+    },
+    {
+      "displayName": "ASH//LEDGER Vertical Slice",
+      "description": "Generate the formal UI Toolkit lobby, RIFT RELAY combat scene and three editable weapon blockouts.",
+      "path": "Samples~/FormalVerticalSlice"
     }
   ]
 }

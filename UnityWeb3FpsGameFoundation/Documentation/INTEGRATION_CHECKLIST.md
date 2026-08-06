@@ -1,5 +1,17 @@
 # Unity 集成检查单
 
+## ASH//LEDGER 垂直切片 v1.4
+
+- [x] 提供一键生成 UI Toolkit 正式大厅与 RIFT RELAY 战斗场景的 Unity 菜单。
+- [x] 大厅绑定 Mock 钱包、NFT、奖励和赛事状态，PLAY 始终为默认焦点。
+- [x] 战斗 HUD 不显示钱包、tokenId、交易或链状态。
+- [x] 生成 KESTREL-7、PULSE-9、RELAY-3 三把可编辑灰盒 Prefab。
+- [x] RIFT RELAY 包含三路结构、阵营色、中央中继柱、冷却通道和硬掩体。
+- [x] NFT 槽位与武器内容目录具备 EditMode 覆盖；静态审计 35/35 通过。
+- [ ] 在 Unity 6000.3.21f1 中执行生成器并确认 UXML/USS 无导入错误。
+- [ ] 手工完成大厅进入 RIFT RELAY、击杀、复活和结算的一整局。
+- [ ] 用最终模型、动画、VFX、音频和生产联网实现替换当前灰盒。
+
 ## 本地 Prototype v1.1
 
 - [x] 提供 Unity 菜单生成可编辑的 Prototype 场景。

@@ -1,0 +1,54 @@
+:root {
+    --graphite: rgb(9, 14, 18);
+    --panel: rgba(12, 20, 26, 0.94);
+    --panel-soft: rgba(22, 31, 38, 0.88);
+    --line: rgba(143, 164, 176, 0.34);
+    --bone: rgb(222, 224, 218);
+    --muted: rgb(141, 157, 165);
+    --cobalt: rgb(63, 139, 210);
+    --coral: rgb(218, 105, 83);
+    --verified: rgb(87, 195, 143);
+}
+
+.screen { flex-grow: 1; background-color: rgba(4, 8, 11, 0.42); color: var(--bone); }
+.topbar { height: 88px; flex-direction: row; justify-content: space-between; align-items: center; padding-left: 30px; padding-right: 24px; background-color: rgba(6, 11, 15, 0.95); border-bottom-width: 1px; border-bottom-color: var(--line); }
+.brand { font-size: 28px; letter-spacing: 4px; color: white; -unity-font-style: bold; }
+.eyebrow, .page-kicker { font-size: 11px; letter-spacing: 2px; color: var(--muted); margin-top: 3px; }
+.topbar-status { flex-direction: row; align-items: center; }
+.status { color: var(--verified); margin-right: 18px; font-size: 11px; }
+.wallet { color: var(--muted); margin-right: 12px; font-size: 11px; }
+.quiet-button { height: 32px; margin-left: 6px; padding-left: 13px; padding-right: 13px; color: var(--bone); background-color: var(--panel-soft); border-color: var(--line); border-width: 1px; }
+.body { flex-grow: 1; flex-direction: row; }
+.rail { width: 190px; padding: 18px 14px; background-color: rgba(7, 12, 16, 0.96); border-right-width: 1px; border-right-color: var(--line); }
+.nav-button { height: 46px; margin-bottom: 8px; -unity-text-align: middle-left; padding-left: 18px; font-size: 12px; letter-spacing: 1px; color: var(--muted); background-color: rgba(18, 27, 34, 0.72); border-width: 0; }
+.nav-button:hover { color: white; background-color: rgba(42, 65, 80, 0.92); }
+.nav-primary { color: white; background-color: rgba(43, 105, 166, 0.9); }
+.rail-spacer { flex-grow: 1; }
+.rail-note { white-space: normal; color: rgb(100, 119, 127); font-size: 9px; margin: 8px; }
+.content { flex-grow: 1; padding: 34px; justify-content: flex-end; }
+.page { flex-grow: 1; }
+.scroll-page { padding-right: 8px; }
+.hero-title { font-size: 48px; letter-spacing: 5px; color: white; -unity-font-style: bold; margin-top: 42px; }
+.hero-subtitle { color: var(--cobalt); font-size: 14px; letter-spacing: 2px; margin-top: 7px; }
+.hero-spacer { flex-grow: 1; }
+.hero-card { max-width: 680px; padding: 18px; margin-bottom: 16px; background-color: var(--panel); border-left-width: 3px; border-left-color: var(--verified); }
+.deploy-button { width: 310px; height: 58px; margin-bottom: 30px; color: white; font-size: 15px; letter-spacing: 1px; -unity-font-style: bold; background-color: rgb(35, 104, 165); border-width: 1px; border-color: rgb(87, 158, 216); }
+.page-title { font-size: 28px; letter-spacing: 3px; color: white; -unity-font-style: bold; margin-top: 16px; }
+.section-title { font-size: 13px; letter-spacing: 2px; color: var(--bone); -unity-font-style: bold; }
+.section-gap { margin-top: 26px; }
+.body-copy { white-space: normal; color: var(--muted); font-size: 12px; margin-top: 8px; }
+.weapon-strip { flex-direction: row; margin-top: 28px; }
+.weapon-card { flex-grow: 1; min-height: 170px; margin-right: 12px; padding: 20px; justify-content: flex-end; background-color: var(--panel); border-top-width: 2px; border-top-color: var(--line); }
+.weapon-name { font-size: 20px; letter-spacing: 2px; color: white; -unity-font-style: bold; }
+.safety-note { margin-top: 18px; padding: 14px; color: var(--verified); background-color: rgba(35, 86, 66, 0.38); font-size: 11px; }
+.data-list { margin-top: 18px; }
+.data-card { margin-bottom: 10px; padding: 14px 16px; background-color: var(--panel); border-left-width: 2px; border-left-color: var(--line); }
+.card-header { flex-direction: row; justify-content: space-between; align-items: center; }
+.card-title { color: white; font-size: 13px; letter-spacing: 1px; -unity-font-style: bold; }
+.card-detail { color: var(--muted); font-size: 10px; margin-top: 7px; }
+.state-chip { color: var(--verified); font-size: 10px; letter-spacing: 1px; }
+.card-action { width: 150px; height: 32px; margin-top: 10px; color: white; background-color: rgba(41, 96, 143, 0.9); border-width: 0; }
+.right-rail { width: 310px; padding: 24px 18px; background-color: rgba(7, 12, 16, 0.93); border-left-width: 1px; border-left-color: var(--line); }
+.right-card, .proof-card { margin-top: 18px; padding: 18px; background-color: var(--panel-soft); border-width: 1px; border-color: var(--line); }
+.progress { height: 5px; margin-top: 15px; background-color: rgb(38, 45, 49); }
+.progress-fill { width: 58%; height: 5px; background-color: var(--coral); }

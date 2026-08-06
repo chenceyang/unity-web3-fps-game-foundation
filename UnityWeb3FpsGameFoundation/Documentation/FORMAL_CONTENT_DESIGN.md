@@ -1,13 +1,21 @@
 # 正式内容设计方案 v1.0
 
-状态：首发方向提案，可用于概念验证、外包 Brief、UI 原型、地图 Greybox 和武器内容排期。
+状态：首发方向已进入 Gate B 垂直切片制作；可用于概念验证、外包 Brief、UI 原型、地图 Greybox 和武器内容排期。
 
-适用底层：`com.web3fps.game-foundation` 1.3.0。本文只定义游戏表现和内容，不改变现有安全边界：
+适用底层：`com.web3fps.game-foundation` 1.4.0。本文只定义游戏表现和内容，不改变现有安全边界：
 战斗由权威服务器判定；Web3 仅管理所有权、来源、展示、奖励、赛事资金和结果存证；NFT 永不改变战斗数值。
 
 ![ASH//LEDGER 首个垂直切片概念板](Visuals/ash-ledger-concept-board-v1.png)
 
 > 概念板用于统一布局、材质、色彩、地图模块与武器轮廓，不是最终可直接切图的 UI 或生产资产。
+
+## 当前实现映射（v1.4）
+
+- `Tools > Web3 FPS > Create ASH LEDGER Vertical Slice` 生成两张可编辑场景。
+- `AshLedgerLobby` 已使用 UI Toolkit 实现 PLAY / ARSENAL / VAULT / TOURNAMENTS / PROFILE 导航，并绑定 Mock Web3 状态。
+- `RiftRelay` 已实现三路战斗灰盒、正式战斗 HUD、本地玩家/机器人、7 击杀与 5 分钟结算循环。
+- KESTREL-7、PULSE-9、RELAY-3 已有第一版可编辑轮廓 Prefab；其余三把武器尚未制作。
+- 当前角色、武器、场景均为灰盒资产；高精度模型、动画、特效、音频、联网和真实后端仍属于后续 Gate。
 
 ## 1. 产品主张
 
