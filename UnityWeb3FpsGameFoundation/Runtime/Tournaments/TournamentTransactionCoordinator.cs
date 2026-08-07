@@ -1,15 +1,24 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Game.Web3;
 using Web3Fps.GameFoundation.Services;
 
 namespace Web3Fps.GameFoundation.Tournaments
 {
+    /// <summary>
+    /// Creates a tournament transaction intent and hands its actionUrl to the system
+    /// browser. All tournament money movement is an on-chain transaction signed
+    /// outside the game, so there is nothing to poll here: the lobby refreshes
+    /// tournament state from the backend afterwards and the contract stays the
+    /// source of truth.
+    /// </summary>
     public sealed class TournamentTransactionCoordinator
     {
         private readonly ITournamentGateway _gateway;
         private readonly IExternalUrlLauncher _urlLauncher;
-        public event Action<TransactionStatus> StatusChanged;
+
+        public event Action<TournamentIntent> IntentLaunched;
 
         public TournamentTransactionCoordinator(ITournamentGateway gateway, IExternalUrlLauncher urlLauncher)
         {
@@ -17,30 +26,22 @@ namespace Web3Fps.GameFoundation.Tournaments
             _urlLauncher = urlLauncher ?? throw new ArgumentNullException(nameof(urlLauncher));
         }
 
-        public async Task<TransactionStatus> CompleteAsync(
-            TransactionIntent intent, TimeSpan pollInterval, TimeSpan maximumDuration, CancellationToken ct = default)
+        /// <param name="action">One of the <see cref="TournamentAction"/> constants.</param>
+        public async Task<TournamentIntent> LaunchAsync(
+            string tournamentId, string action, CancellationToken ct = default)
         {
-            if (intent == null || string.IsNullOrWhiteSpace(intent.intentId))
-                throw new ArgumentException("A valid transaction intent is required", nameof(intent));
-            if (intent.requiresPlayerAction)
-            {
-                if (string.IsNullOrWhiteSpace(intent.actionUrl))
-                    throw new TournamentGatewayException("Transaction intent is missing actionUrl", 0, "invalid_response");
-                _urlLauncher.Open(intent.actionUrl);
-            }
+            if (string.IsNullOrWhiteSpace(tournamentId))
+                throw new ArgumentException("tournamentId is required", nameof(tournamentId));
+            if (string.IsNullOrWhiteSpace(action))
+                throw new ArgumentException("action is required", nameof(action));
 
-            var deadline = DateTime.UtcNow + maximumDuration;
-            while (DateTime.UtcNow < deadline)
-            {
-                var status = await _gateway.PollTransactionAsync(intent.intentId, ct);
-                StatusChanged?.Invoke(status);
-                if (status.IsTerminal) return status;
-                await Task.Delay(pollInterval, ct);
-            }
+            var intent = await _gateway.CreateIntentAsync(tournamentId, action, ct);
+            if (intent == null || string.IsNullOrWhiteSpace(intent.actionUrl))
+                throw new GameAssetException("Tournament intent is missing actionUrl", 0, "invalid_response");
 
-            var timeout = new TransactionStatus { state = "failed", error = "Transaction confirmation timed out" };
-            StatusChanged?.Invoke(timeout);
-            return timeout;
+            _urlLauncher.Open(intent.actionUrl); // Always the system browser in production.
+            IntentLaunched?.Invoke(intent);
+            return intent;
         }
     }
 }

@@ -16,6 +16,19 @@ namespace Web3Fps.GameFoundation.Gameplay
 
         public void SetLookDelta(Vector2 delta) => _lookDelta = delta;
 
+        /// <summary>
+        /// Applies the look delta immediately. The input driver calls this during its
+        /// Update, before movement and firing sample this transform, so aim direction
+        /// and move direction never lag the mouse by a frame. LateUpdate still runs to
+        /// decay recoil and to serve adapters that only call <see cref="SetLookDelta"/>.
+        /// </summary>
+        public void ApplyLook(Vector2 delta)
+        {
+            _lookDelta = delta;
+            ConsumePendingDelta();
+            ApplyPivotRotation();
+        }
+
         public void Configure(Transform pivot, float lookSensitivity = 0.12f)
         {
             pitchPivot = pivot;
@@ -30,12 +43,23 @@ namespace Web3Fps.GameFoundation.Gameplay
 
         public void Simulate()
         {
-            transform.Rotate(0f, _lookDelta.x * sensitivity, 0f, Space.Self);
-            _pitch = Mathf.Clamp(_pitch - _lookDelta.y * sensitivity, minPitch, maxPitch);
-            if (pitchPivot != null) pitchPivot.localRotation = Quaternion.Euler(_pitch + _recoilPitch, _recoilYaw, 0f);
+            ConsumePendingDelta();
             _recoilPitch = Mathf.MoveTowards(_recoilPitch, 0f, 8f * Time.deltaTime);
             _recoilYaw = Mathf.MoveTowards(_recoilYaw, 0f, 6f * Time.deltaTime);
+            ApplyPivotRotation();
+        }
+
+        private void ConsumePendingDelta()
+        {
+            if (_lookDelta == Vector2.zero) return;
+            transform.Rotate(0f, _lookDelta.x * sensitivity, 0f, Space.Self);
+            _pitch = Mathf.Clamp(_pitch - _lookDelta.y * sensitivity, minPitch, maxPitch);
             _lookDelta = Vector2.zero;
+        }
+
+        private void ApplyPivotRotation()
+        {
+            if (pitchPivot != null) pitchPivot.localRotation = Quaternion.Euler(_pitch + _recoilPitch, _recoilYaw, 0f);
         }
 
         private void LateUpdate() => Simulate();

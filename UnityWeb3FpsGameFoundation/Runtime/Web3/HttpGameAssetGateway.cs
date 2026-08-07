@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -7,134 +6,69 @@ using UnityEngine.Networking;
 
 namespace Game.Web3
 {
+    /// <summary>
+    /// 走游戏后端 REST 的真实实现。接口契约见 api/openapi.yaml。
+    ///
+    /// 认证用游戏自己的会话 token（与登录态一致），不是钱包签名 —— 钱包只是
+    /// 玩家账号的一个属性，playerId 才是身份（PRD ACC-001）。
+    /// </summary>
     public sealed class HttpGameAssetGateway : IGameAssetGateway
     {
-        private readonly string _baseUrl;
-        private readonly Func<string> _accessTokenProvider;
-        private readonly int _timeoutSeconds;
+        private readonly HttpApiClient _http;
 
+        /// <param name="baseUrl">形如 https://api.example.com（不带尾斜杠）</param>
+        /// <param name="accessTokenProvider">返回当前游戏会话 token</param>
         public HttpGameAssetGateway(string baseUrl, Func<string> accessTokenProvider, int timeoutSeconds = 10)
         {
-            if (string.IsNullOrWhiteSpace(baseUrl)) throw new ArgumentException("baseUrl is required", nameof(baseUrl));
-            if (timeoutSeconds <= 0) throw new ArgumentOutOfRangeException(nameof(timeoutSeconds));
-            _baseUrl = baseUrl.TrimEnd('/');
-            _accessTokenProvider = accessTokenProvider ?? throw new ArgumentNullException(nameof(accessTokenProvider));
-            _timeoutSeconds = timeoutSeconds;
+            _http = new HttpApiClient(baseUrl, accessTokenProvider, timeoutSeconds);
         }
 
+        /// <summary>允许外部复用同一个客户端（例如与 HttpTournamentGateway 共享配置）。</summary>
+        public HttpGameAssetGateway(HttpApiClient http)
+        {
+            _http = http ?? throw new ArgumentNullException(nameof(http));
+        }
+
+        public Task<ChainConfig> GetConfigAsync(CancellationToken ct = default)
+            => _http.GetAsync<ChainConfig>("/v1/config", ct);
+
         public Task<PlayerAssets> GetPlayerAssetsAsync(CancellationToken ct = default)
-            => SendAsync<PlayerAssets>(UnityWebRequest.kHttpVerbGET, "/v1/assets", null, ct);
+            => _http.GetAsync<PlayerAssets>("/v1/assets", ct);
 
         public Task<WalletBindSession> BeginWalletBindAsync(CancellationToken ct = default)
-            => SendAsync<WalletBindSession>(UnityWebRequest.kHttpVerbPOST, "/v1/wallet/bind", null, ct);
+            => _http.PostAsync<WalletBindSession>("/v1/wallet/bind", null, ct);
 
         public Task<WalletBindStatus> PollWalletBindAsync(string sessionId, CancellationToken ct = default)
         {
-            RequireId(sessionId, nameof(sessionId));
-            return SendAsync<WalletBindStatus>(UnityWebRequest.kHttpVerbGET,
-                "/v1/wallet/bind/" + UnityWebRequest.EscapeURL(sessionId), null, ct);
+            Require(sessionId, nameof(sessionId));
+            return _http.GetAsync<WalletBindStatus>(
+                $"/v1/wallet/bind/{HttpApiClient.Escape(sessionId)}", ct);
         }
 
         public Task<ClaimTicket> RequestClaimAsync(string rewardId, CancellationToken ct = default)
         {
-            RequireId(rewardId, nameof(rewardId));
-            return SendAsync<ClaimTicket>(UnityWebRequest.kHttpVerbPOST,
-                "/v1/rewards/" + UnityWebRequest.EscapeURL(rewardId) + "/claim", null, ct);
+            Require(rewardId, nameof(rewardId));
+            return _http.PostAsync<ClaimTicket>(
+                $"/v1/rewards/{HttpApiClient.Escape(rewardId)}/claim", null, ct);
         }
 
         public Task<RewardStatus> PollRewardAsync(string rewardId, CancellationToken ct = default)
         {
-            RequireId(rewardId, nameof(rewardId));
-            return SendAsync<RewardStatus>(UnityWebRequest.kHttpVerbGET,
-                "/v1/rewards/" + UnityWebRequest.EscapeURL(rewardId), null, ct);
+            Require(rewardId, nameof(rewardId));
+            return _http.GetAsync<RewardStatus>(
+                $"/v1/rewards/{HttpApiClient.Escape(rewardId)}", ct);
         }
 
-        public async Task SetLoadoutAsync(LoadoutRequest request, CancellationToken ct = default)
+        public Task SetLoadoutAsync(LoadoutRequest request, CancellationToken ct = default)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
-            await SendAsync<EmptyResponse>(UnityWebRequest.kHttpVerbPUT, "/v1/loadout",
-                JsonUtility.ToJson(request), ct);
+            return _http.SendNoContentAsync(
+                UnityWebRequest.kHttpVerbPUT, "/v1/loadout", JsonUtility.ToJson(request), ct);
         }
 
-        private async Task<T> SendAsync<T>(string method, string path, string jsonBody, CancellationToken ct)
-            where T : class
+        private static void Require(string value, string name)
         {
-            using (var request = new UnityWebRequest(_baseUrl + path, method))
-            {
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.timeout = _timeoutSeconds;
-                request.SetRequestHeader("Accept", "application/json");
-
-                if (jsonBody != null)
-                {
-                    request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
-                    request.SetRequestHeader("Content-Type", "application/json");
-                }
-
-                var token = _accessTokenProvider();
-                if (!string.IsNullOrWhiteSpace(token))
-                    request.SetRequestHeader("Authorization", "Bearer " + token);
-
-                try
-                {
-                    await request.SendWebRequest().AwaitAsync(ct);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    throw new GameAssetException(method + " " + path + " failed: " + ex.Message, inner: ex);
-                }
-
-                if (request.result != UnityWebRequest.Result.Success)
-                    throw BuildException(method, path, request);
-
-                var body = request.downloadHandler.text;
-                if (typeof(T) == typeof(EmptyResponse) || string.IsNullOrWhiteSpace(body)) return null;
-
-                try
-                {
-                    return JsonUtility.FromJson<T>(body);
-                }
-                catch (Exception ex)
-                {
-                    throw new GameAssetException(method + " " + path + " returned invalid JSON",
-                        (int)request.responseCode, "invalid_response", ex);
-                }
-            }
+            if (string.IsNullOrEmpty(value)) throw new ArgumentException($"{name} is required", name);
         }
-
-        private static GameAssetException BuildException(string method, string path, UnityWebRequest request)
-        {
-            var status = (int)request.responseCode;
-            var raw = request.downloadHandler != null ? request.downloadHandler.text : null;
-            if (!string.IsNullOrWhiteSpace(raw))
-            {
-                try
-                {
-                    var error = JsonUtility.FromJson<ErrorResponse>(raw);
-                    if (error != null && !string.IsNullOrWhiteSpace(error.code))
-                        return new GameAssetException(method + " " + path + ": " +
-                            (string.IsNullOrWhiteSpace(error.message) ? error.code : error.message), status, error.code);
-                }
-                catch
-                {
-                    // Fall through to the transport-level error.
-                }
-            }
-
-            return new GameAssetException(method + " " + path + " failed with HTTP " + status,
-                status, "http_error");
-        }
-
-        private static void RequireId(string value, string paramName)
-        {
-            if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException(paramName + " is required", paramName);
-        }
-
-        [Serializable] private sealed class EmptyResponse { }
-        [Serializable] private sealed class ErrorResponse { public string code; public string message; }
     }
 }

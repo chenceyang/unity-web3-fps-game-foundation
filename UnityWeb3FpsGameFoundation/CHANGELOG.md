@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.0 - 2026-08-07
+
+- Smoothed movement and aim: the input driver now runs before the motor and weapon and applies look rotation in the same frame, removing one frame of input/aim latency, and the motor snaps the controller onto descending slopes instead of bouncing.
+- Removed steady per-frame allocation sources that caused GC hitches: the rig guard caches its renderer set, the bot uses non-allocating physics queries, combat tracers/muzzle flashes/impacts are pooled instead of created and destroyed per shot, weapon audio is synthesized up front, and the combat HUD only touches UI Toolkit when a readout actually changes.
+- Realigned the `Game.Web3` layer with the current web3-fps-assets unity-sdk and `api/openapi.yaml`: added `GetConfigAsync`/`ChainConfig`, the full reward state machine (earned/held/claimable/processing/pending_chain/confirmed/failed), `Amount` wei+formatted money, and replaced the four tournament intent routes plus transaction polling with the single `/v1/tournaments/{id}/intents/{action}` route, `TournamentDetail` trust fields and post-match `GetMatchAsync` records.
+- Tournament transactions no longer poll: the coordinator creates the intent, opens the system browser and the lobby refreshes state from the backend after the transaction lands on-chain.
+- Hardened the HTTP boundary: shared `HttpApiClient` with unified auth/error mapping, null-safe handling of blank 2xx bodies in the bind/claim poll loops, and match result publishing now raises a dedicated conflict error on HTTP 409 that fails fast instead of retrying a doomed payload.
+- Declared the built-in module dependencies in `package.json`, generated deterministic `.meta` files for every asset (`tools/generate_unity_metas.py`) so cross-machine GUID references stay stable, and removed the stale package-local backend OpenAPI copy in favour of the single upstream contract.
+- Static compilation and the EditMode suite have not been re-run on this machine (no Unity/Windows audit host available); 61 test cases are defined and must be verified in the next Unity session.
+
 ## 1.7.0 - 2026-08-07
 
 - Added explicit head, torso and leg damage zones, self-hit filtering, spawn protection and damage-only hit confirmation.

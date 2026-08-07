@@ -43,6 +43,9 @@ namespace Web3Fps.GameFoundation.Formal
         {
             if (weaponRoot == null) weaponRoot = transform;
             CaptureBasePose();
+            // Clip synthesis is ~10k samples of math; doing it lazily put that cost
+            // inside the first trigger pull as a one-off hitch. Warm it up instead.
+            EnsureAudio();
         }
 
         private void OnEnable() => Subscribe();

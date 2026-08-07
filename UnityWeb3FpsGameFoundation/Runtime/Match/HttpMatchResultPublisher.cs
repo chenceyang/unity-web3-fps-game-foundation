@@ -46,7 +46,12 @@ namespace Web3Fps.GameFoundation.Match
                 if (!string.IsNullOrWhiteSpace(token)) request.SetRequestHeader("Authorization", "Bearer " + token);
                 await request.SendWebRequest().AwaitAsync(ct);
                 if (request.result != UnityWebRequest.Result.Success)
+                {
+                    if ((int)request.responseCode == 409)
+                        throw new MatchResultConflictException(
+                            "Backend already holds a different result for match " + payload.Result.matchId);
                     throw new InvalidOperationException("Match publish failed with HTTP " + request.responseCode);
+                }
             }
         }
 

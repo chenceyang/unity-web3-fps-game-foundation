@@ -5,7 +5,6 @@ using NUnit.Framework;
 using Web3Fps.GameFoundation.Composition;
 using Web3Fps.GameFoundation.Lobby;
 using Web3Fps.GameFoundation.Services;
-using Web3Fps.GameFoundation.Tournaments;
 
 namespace Web3Fps.GameFoundation.Tests
 {
@@ -20,7 +19,7 @@ namespace Web3Fps.GameFoundation.Tests
 
             Assert.That(success, Is.True);
             Assert.That(fixture.Session.Assets.items, Has.Length.EqualTo(2));
-            Assert.That(fixture.Session.Tournaments, Has.Length.EqualTo(1));
+            Assert.That(fixture.Session.Tournaments, Has.Length.EqualTo(4));
             Assert.That(fixture.Session.IsBusy, Is.False);
         }
 
@@ -49,8 +48,23 @@ namespace Web3Fps.GameFoundation.Tests
             Assert.That(bound, Is.True);
             Assert.That(claimed, Is.True);
             Assert.That(fixture.Session.Assets.HasWallet, Is.True);
-            Assert.That(fixture.Session.Assets.pendingRewards, Is.Empty);
+            // The claimable reward is consumed; the anti-cheat-held one must remain.
+            Assert.That(fixture.Session.Assets.pendingRewards, Has.Length.EqualTo(1));
+            Assert.That(fixture.Session.Assets.pendingRewards[0].IsHeld, Is.True);
             Assert.That(fixture.UrlLauncher.LastOpenedUrl, Does.Contain("/bind/"));
+        }
+
+        [Test]
+        public async Task HeldRewardIsRefusedWithExplicitCode()
+        {
+            var fixture = CreateFixture();
+            await fixture.Session.RefreshAsync();
+            await fixture.Session.BindWalletAsync();
+
+            var claimed = await fixture.Session.ClaimRewardAsync("rw_demo_held");
+
+            Assert.That(claimed, Is.False);
+            Assert.That(fixture.Session.LastErrorCode, Is.EqualTo("reward_held"));
         }
 
         [Test]
@@ -59,16 +73,16 @@ namespace Web3Fps.GameFoundation.Tests
             var fixture = CreateFixture();
             await fixture.Session.RefreshAsync();
 
-            var success = await fixture.Session.RegisterTournamentAsync("1");
+            var success = await fixture.Session.RegisterTournamentAsync("t_open");
 
             Assert.That(success, Is.True);
-            Assert.That(fixture.UrlLauncher.LastOpenedUrl, Does.Contain("/tournaments/1/register"));
+            Assert.That(fixture.UrlLauncher.LastOpenedUrl, Does.Contain("/tournaments/t_open/register"));
             Assert.That(fixture.Session.LastErrorCode, Is.Empty);
         }
 
         private static Fixture CreateFixture()
         {
-            var assets = new MockGameAssetGateway { LatencyMs = 0, BindPollsRequired = 1 };
+            var assets = new MockGameAssetGateway { LatencyMs = 0, BindPollsRequired = 1, RewardStepMs = 1 };
             var tournaments = new MockTournamentGateway { LatencyMs = 0 };
             var launcher = new MockExternalUrlLauncher();
             var context = new GameFoundationContext(assets, tournaments, launcher, 3);

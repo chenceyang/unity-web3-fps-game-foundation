@@ -16,6 +16,7 @@ namespace Web3Fps.GameFoundation.Match
         {
             public string ResultHash;
             public bool Published;
+            public bool Conflicted;
         }
 
         private readonly IMatchResultPublisher _publisher;
@@ -46,8 +47,21 @@ namespace Web3Fps.GameFoundation.Match
                     throw new InvalidOperationException("A different result already exists for match " + payload.Result.matchId);
                 }
 
+                if (state.Conflicted)
+                    throw new MatchResultConflictException(
+                        "Backend already holds a different result for match " + payload.Result.matchId);
                 if (state.Published) return false;
-                await _publisher.PublishAsync(payload, ct);
+                try
+                {
+                    await _publisher.PublishAsync(payload, ct);
+                }
+                catch (MatchResultConflictException)
+                {
+                    // A 409 is permanent for this payload; keep failing fast instead of
+                    // letting a retry queue hammer the backend with a doomed request.
+                    state.Conflicted = true;
+                    throw;
+                }
                 state.Published = true;
                 return true;
             }

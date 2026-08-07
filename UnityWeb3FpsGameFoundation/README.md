@@ -45,6 +45,9 @@ Unity 2022.3 的最终编辑器编译仍待验证。包本身没有 Nethereum、
 包内含 EditMode 测试。当前 Unity 6.3 验证工程使用 `com.unity.test-framework 1.6.0` 和
 `com.unity.ext.nunit 2.0.5`；若项目未安装 Test Framework，测试源码会因找不到 NUnit 类型而无法编译。
 
+包已声明所用内置模块依赖（Physics、UIElements、UnityWebRequest 等），并为全部资产提供确定性
+GUID 的 `.meta` 文件（由 `tools/generate_unity_metas.py` 生成）；新增文件后重跑该脚本即可补齐。
+
 ## 可玩本地 Prototype
 
 1. 在 Unity 菜单执行 `Tools > Web3 FPS > Create Local Prototype Scene`。
@@ -145,10 +148,12 @@ await publisher.PublishAsync(payload, ct);
 
 ## 赛事安全边界
 
-Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITournamentGateway` 返回 `actionUrl`，
-客户端用系统浏览器完成交易。游戏内展示 `Open / Settled / Cancelled`，金额始终使用十进制字符串表示 wei。
+Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITournamentGateway.CreateIntentAsync`
+返回 `actionUrl`，客户端用系统浏览器完成交易，游戏内不轮询交易状态——链上结果通过后端刷新回读。
+游戏内展示 `open / settled / cancelled` 与取消原因，金额一律使用 `Amount`（wei 十进制字符串 + 格式化值）。
 
-后端扩展契约见 `Documentation/game-backend-extension-openapi.yaml`。
+后端契约的唯一来源是 web3-fps-assets 仓库的 `api/openapi.yaml`；本包 `Game.Web3` 与 `Tournaments`
+目录是其 unity-sdk 的逐字镜像，不要在包内单独修改契约文件。
 正式 UI、美术、地图、武器和 Web3 创意方向见 `Documentation/FORMAL_CONTENT_DESIGN.md`。
 
 ## 资产失败策略

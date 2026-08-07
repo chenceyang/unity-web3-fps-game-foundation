@@ -2,7 +2,6 @@ using System;
 using Game.Web3;
 using UnityEngine;
 using Web3Fps.GameFoundation.Services;
-using Web3Fps.GameFoundation.Tournaments;
 
 namespace Web3Fps.GameFoundation.Composition
 {
@@ -41,8 +40,9 @@ namespace Web3Fps.GameFoundation.Composition
             else
             {
                 Func<string> tokenProvider = () => _accessToken;
-                assets = new HttpGameAssetGateway(apiBaseUrl, tokenProvider, httpTimeoutSeconds);
-                tournaments = new HttpTournamentGateway(apiBaseUrl, tokenProvider, httpTimeoutSeconds);
+                var http = new HttpApiClient(apiBaseUrl, tokenProvider, httpTimeoutSeconds);
+                assets = new HttpGameAssetGateway(http);
+                tournaments = new HttpTournamentGateway(http);
                 urlLauncher = new SystemBrowserUrlLauncher();
             }
 

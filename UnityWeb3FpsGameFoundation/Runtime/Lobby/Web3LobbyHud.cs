@@ -120,18 +120,25 @@ namespace Web3Fps.GameFoundation.Lobby
             {
                 if (tournament == null) continue;
                 GUILayout.BeginVertical(GUI.skin.box);
-                GUILayout.Label(tournament.title + " · " + tournament.state + " · " +
-                                tournament.participantCount + "/" + tournament.maxParticipants + " players");
-                GUILayout.Label("Entry fee (wei): " + tournament.entryFeeWei + " · Prize pool (wei): " + tournament.prizePoolWei);
+                GUILayout.Label(tournament.title + " · " + tournament.status + " · " +
+                                tournament.participantCount + "/" + tournament.maxParticipants + " players" +
+                                (tournament.isRegistered ? " · registered" : string.Empty));
+                GUILayout.Label("Entry fee: " + FormatAmount(tournament.entryFee) +
+                                " · Prize pool: " + FormatAmount(tournament.prizePool));
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Register", GUILayout.Width(110f))) _ = controller.RegisterTournamentAsync(tournament.tournamentId);
-                if (GUILayout.Button("Sponsor entry fee", GUILayout.Width(150f)))
-                    _ = controller.SponsorTournamentAsync(tournament.tournamentId, tournament.entryFeeWei);
+                if (GUILayout.Button("Sponsor", GUILayout.Width(110f))) _ = controller.SponsorTournamentAsync(tournament.tournamentId);
                 if (GUILayout.Button("Claim Prize", GUILayout.Width(110f))) _ = controller.ClaimPrizeAsync(tournament.tournamentId);
                 if (GUILayout.Button("Refund", GUILayout.Width(90f))) _ = controller.ClaimRefundAsync(tournament.tournamentId);
                 GUILayout.EndHorizontal();
                 GUILayout.EndVertical();
             }
+        }
+
+        private static string FormatAmount(Game.Web3.Amount amount)
+        {
+            if (amount == null || string.IsNullOrEmpty(amount.formatted)) return "—";
+            return amount.formatted + " " + amount.symbol;
         }
 
         private void EnsureStyles()

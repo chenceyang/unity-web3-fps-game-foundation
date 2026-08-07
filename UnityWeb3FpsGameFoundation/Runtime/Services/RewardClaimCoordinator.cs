@@ -22,6 +22,8 @@ namespace Web3Fps.GameFoundation.Services
             string rewardId, TimeSpan pollInterval, TimeSpan maximumDuration, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(rewardId)) throw new ArgumentException("rewardId is required", nameof(rewardId));
+            if (pollInterval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(pollInterval));
+            if (maximumDuration <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(maximumDuration));
             var ticket = await _gateway.RequestClaimAsync(rewardId, ct);
             if (ticket != null && ticket.requiresPlayerAction)
             {
@@ -34,8 +36,11 @@ namespace Web3Fps.GameFoundation.Services
             while (DateTime.UtcNow < deadline)
             {
                 var status = await _gateway.PollRewardAsync(rewardId, ct);
-                StatusChanged?.Invoke(status);
-                if (status.IsTerminal) return status;
+                if (status != null) // A blank 2xx body deserializes to null; treat as transient.
+                {
+                    StatusChanged?.Invoke(status);
+                    if (status.IsTerminal) return status;
+                }
                 await Task.Delay(pollInterval, ct);
             }
 

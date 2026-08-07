@@ -69,7 +69,7 @@ namespace Web3Fps.GameFoundation.Lobby
         public Task<bool> UseDefaultAsync(int slot) => Run(session => session.UseDefaultAsync(slot, _lifetime.Token));
         public Task<bool> ClaimRewardAsync(string rewardId) => Run(session => session.ClaimRewardAsync(rewardId, _lifetime.Token));
         public Task<bool> RegisterTournamentAsync(string tournamentId) => Run(session => session.RegisterTournamentAsync(tournamentId, _lifetime.Token));
-        public Task<bool> SponsorTournamentAsync(string tournamentId, string amountWei) => Run(session => session.SponsorTournamentAsync(tournamentId, amountWei, _lifetime.Token));
+        public Task<bool> SponsorTournamentAsync(string tournamentId) => Run(session => session.SponsorTournamentAsync(tournamentId, _lifetime.Token));
         public Task<bool> ClaimPrizeAsync(string tournamentId) => Run(session => session.ClaimPrizeAsync(tournamentId, _lifetime.Token));
         public Task<bool> ClaimRefundAsync(string tournamentId) => Run(session => session.ClaimRefundAsync(tournamentId, _lifetime.Token));
 

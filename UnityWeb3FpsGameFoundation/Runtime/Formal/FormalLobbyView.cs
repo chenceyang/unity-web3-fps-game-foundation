@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using Web3Fps.GameFoundation.Lobby;
-using Web3Fps.GameFoundation.Tournaments;
 
 namespace Web3Fps.GameFoundation.Formal
 {
@@ -244,16 +243,19 @@ namespace Web3Fps.GameFoundation.Formal
             {
                 if (tournament == null) continue;
                 var tournamentId = tournament.tournamentId;
+                var pool = tournament.prizePool == null || string.IsNullOrEmpty(tournament.prizePool.formatted)
+                    ? "—"
+                    : tournament.prizePool.formatted + " " + tournament.prizePool.symbol;
                 var card = CreateCard(
                     tournament.title.ToUpperInvariant(),
-                    tournament.participantCount + "/" + tournament.maxParticipants + " OPERATORS   POOL " + tournament.prizePoolWei + " WEI",
-                    tournament.state.ToUpperInvariant());
+                    tournament.participantCount + "/" + tournament.maxParticipants + " OPERATORS   POOL " + pool,
+                    (tournament.status ?? "unknown").ToUpperInvariant());
                 var register = new Button(() => _ = controller.RegisterTournamentAsync(tournamentId))
                 {
-                    text = tournament.registered ? "REGISTERED" : "REGISTER"
+                    text = tournament.isRegistered ? "REGISTERED" : "REGISTER"
                 };
                 register.AddToClassList("card-action");
-                register.SetEnabled(!session.IsBusy && !tournament.registered && tournament.ParsedState == TournamentState.Open);
+                register.SetEnabled(!session.IsBusy && !tournament.isRegistered && tournament.IsOpen);
                 card.Add(register);
                 _tournamentList.Add(card);
             }

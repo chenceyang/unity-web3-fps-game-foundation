@@ -37,6 +37,7 @@ namespace Web3Fps.GameFoundation.Services
             {
                 await Task.Delay(pollInterval, ct);
                 var status = await _gateway.PollWalletBindAsync(session.sessionId, ct);
+                if (status == null) continue; // A blank 2xx body deserializes to null; treat as transient.
                 StatusChanged?.Invoke(status);
                 if (status.IsTerminal) return status;
             }
