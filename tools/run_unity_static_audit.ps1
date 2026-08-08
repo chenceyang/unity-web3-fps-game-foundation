@@ -1,8 +1,29 @@
 param(
-    [string]$UnityEditorPath = "C:\Program Files\Unity\Hub\Editor\6000.3.21f1\Editor\Unity.exe"
+    [string]$UnityEditorPath = ""
 )
 
 $ErrorActionPreference = "Stop"
+$validatedUnityVersion = "6000.3.21f1"
+
+if ([string]::IsNullOrWhiteSpace($UnityEditorPath)) {
+    $runningEditors = @(Get-Process Unity -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty Path -Unique)
+    $unityCandidates = @(
+        "C:\Program Files\Unity\Hub\Editor\$validatedUnityVersion\Editor\Unity.exe",
+        "D:\Unity Hub\$validatedUnityVersion\Editor\Unity.exe",
+        "D:\Unity\Hub\Editor\$validatedUnityVersion\Editor\Unity.exe",
+        "E:\Unity Hub\$validatedUnityVersion\Editor\Unity.exe",
+        "E:\Unity\Hub\Editor\$validatedUnityVersion\Editor\Unity.exe"
+    ) + $runningEditors
+    $UnityEditorPath = $unityCandidates |
+        Where-Object { $_ -and (Test-Path -LiteralPath $_) } |
+        Select-Object -First 1
+}
+
+if (-not $UnityEditorPath -or -not (Test-Path -LiteralPath $UnityEditorPath)) {
+    throw "Unity $validatedUnityVersion editor not found. Pass -UnityEditorPath explicitly."
+}
+
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $packageRoot = Join-Path $repositoryRoot "UnityWeb3FpsGameFoundation"
 $auditOutput = Join-Path $repositoryRoot "work\unity-static-audit"
@@ -10,7 +31,6 @@ $unityData = Join-Path (Split-Path -Parent $UnityEditorPath) "Data"
 $monoRuntime = Join-Path $unityData "MonoBleedingEdge\bin\mono.exe"
 $csharpCompiler = Join-Path $unityData "MonoBleedingEdge\lib\mono\msbuild\Current\bin\Roslyn\csc.exe"
 
-if (-not (Test-Path -LiteralPath $UnityEditorPath)) { throw "Unity editor not found: $UnityEditorPath" }
 New-Item -ItemType Directory -Force -Path $auditOutput | Out-Null
 
 function Get-FrameworkReferences {

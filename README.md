@@ -19,7 +19,7 @@
 - `tools/run_unity_static_audit.ps1` 使用 Unity 6000.3.21f1 引用程序集完成 Runtime、Editor、Tests 编译，117/117 项测试通过（5 个既有序列化字段警告）。
 - 本地垂直切片已实现 UI Toolkit 大厅与战斗 HUD、RIFT RELAY 三路地图、稳定的模块化角色与程序化第一人称手臂、弹药/装填/后坐力/音效、分区伤害/出生保护、动态散布和具备视线/反应/记忆/侧移的 Bot。
 - Web3 侧已实现 Mock/HTTP 资产网关、confirmed loadout、赛事交易意图、AssetBundle 哈希校验、开局 entitlement 边界、结果哈希及发布去重/重试；所有 Web3 调用仍在战斗帧之外。
-- v1.7.0 尚未在 Unity 中重新执行场景生成器，也未完成 Test Runner 与一整局 Play Mode 验收；静态门禁不能替代该运行态验证。
+- v1.9.1 尚未在 Unity 中重新执行场景生成器，也未完成 Test Runner 与一整局 Play Mode 验收；静态门禁不能替代该运行态验证。
 - `1.9.1` 保留 v1.8.0 的手感/GC/契约修复与 v1.9.0 的权威边界、NFT 外观、四个 UI Toolkit 页面及六武器目录；运行时不再实例化曾产生异常包围盒和巨大化几何的第三方骨骼 FBX。
 - 已同步到现役 Unity 集成工程；隔离批处理 Test Runner 因本机缺少 `com.unity.editor.headless` 许可未能启动，仍需在已授权的交互式 Unity 中运行 Test Runner、重建场景并完成整局 Play Mode 验收。
 - 版本历史与每版测试增量只保留在 `UnityWeb3FpsGameFoundation/CHANGELOG.md`。

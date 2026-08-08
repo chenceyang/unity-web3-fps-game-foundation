@@ -34,7 +34,8 @@
 - [x] `Game.Web3` 与赛事层逐字镜像现役 web3-fps-assets unity-sdk:新增 `GetConfigAsync`/`ChainConfig`、完整奖励状态机、`Amount` 金额;赛事改为单一 intent 路由 + `GetMatchAsync`,移除交易轮询。
 - [x] 空 2xx 响应在绑定/领奖轮询中按瞬态处理;结果发布对 HTTP 409 抛专用冲突异常并快速失败,不再重试注定失败的负载。
 - [x] `package.json` 声明内置模块依赖;`tools/generate_unity_metas.py` 为全部资产生成确定性 GUID 的 `.meta`。
-- [ ] 在 Unity 6000.3.21f1 重新运行静态审计与 Test Runner(61 个用例),确认 0 错误后再实机验收。
+- [x] 静态审计已由 v1.9.1 统一复验：Unity 6000.3.21f1 引用编译通过，静态执行器 117/117 项通过。
+- [ ] 在 Unity 6000.3.21f1 运行 Test Runner。
 - [ ] 实机确认新贴地逻辑在 RIFT RELAY 坡道与跳跃时的手感,必要时调整 `GroundSnapDistance` 的斜率上限。
 - [ ] 后端就绪后用 `HttpGameAssetGateway`/`HttpTournamentGateway` 替换 Mock,验证"换实现不改其余代码"。
 

@@ -11,6 +11,7 @@ Unity + C# 的 Web3 FPS 游戏侧底层包；实时战斗与 Web3 资产/奖励/
 - 最终验收：Unity 编译、Unity Test Runner 的 EditMode 测试，以及生成场景的一局 Play Mode 手工验收。
 - `work/` 下的审计工程和渲染图是一次性证据，不是产品源码。
 - 现役 Git 历史位于 `work/upload-git`，命令使用 `git --git-dir=work/upload-git --work-tree=.`；根 `.git` 是未使用的空仓库。在专项迁移前不要删除或混用两者。
+- GitHub 远端只保留并默认使用 `codex/v1.9.1`；不要重新创建已退役的 `main`、`codex/v1.7.0` 或 `codex/v1.7.4`。
 
 ## 目录
 
