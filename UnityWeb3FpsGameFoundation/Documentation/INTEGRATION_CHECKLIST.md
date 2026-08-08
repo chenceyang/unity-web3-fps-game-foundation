@@ -1,5 +1,21 @@
 # Unity 集成检查单
 
+## 权威边界落地与四页补全 v1.9.0
+
+- [x] `LocalAuthoritativeMatchDriver` 在本地切片中扮演专用服务器：确认页在进战斗场景前冻结 entitlement 快照，战斗帧零网关调用，结束后经 `MatchPublishCoordinator` 发布一次并把 published/duplicate/conflict/failed 显示到赛后页与大厅；`AuthoritativeMatchSession` 保留给联网阶段（服务器同时拥有逐击杀计分）。
+- [x] 包侧 DTO 对齐真实后端：entitlement 请求改为 `{playerId, matchId, wallet, tokenIds}` 并映射 `EntitlementResult` 响应（含每槽 contentHash 与 degraded 原因）；结果发布直接 POST 规范化 MatchResult 原文（后端自行 canonicalize + 哈希）；`MatchRewardSlot.slot` 改为 uint8 整数并由本地驱动派生确定性的冠军奖励槽。
+- [x] 登录页：demo `POST /v1/auth/login` 客户端（Mock/Http 双实现，明确 demo-only），token 仅经 `SetAccessToken` 驻内存；游客入口永不依赖钱包。
+- [x] 匹配确认页：模式/地图、冻结 loadout 每槽皮肤名与确认态、降级警示行；entitlement 失败只降级默认外观，不阻断部署。
+- [x] 资产详情页：serial/maxSupply/season/rarity/wear、完整十进制 tokenId、contentHash 缩写、状态解释、装备/默认操作与 ChainConfig marketplaceUrl 系统浏览器跳转。
+- [x] 独立赛后页：比分/名次、发布结果与 `GetMatchAsync` 存证状态；存证失败或档案不可达绝不遮挡比分（MAT-006），REMATCH/返回大厅始终可用。
+- [x] NFT 外观目录：`FormalSkinCatalog` 覆盖后端目录与 SeedSkins.s.sol 的全部 skinDefId，未知 id 落中性默认；`FormalSkinApplicator` 仅经 MaterialPropertyBlock 改视觉；`VerifiedSkinBundleLoader` 获得调用点，hash 不符降级默认外观并告警。
+- [x] `WeaponDefinition` 目录承载六把武器的服务器数值并可写入 `HitscanWeapon`；生成器新增 WITNESS/BREACH-12/ANCHOR 灰盒 Prefab 与大厅陈列。
+- [x] `GameFoundationBootstrap` 的 mock/live 开关同时组合 entitlement 网关、结果发布器与登录客户端；service token 仅内存注入且仅在本进程扮演服务器角色时有意义。
+- [ ] 在 Unity 6000.3.21f1 重新运行静态审计与 Test Runner（115 个用例），v1.9.0 尚未经任何 Unity 验证。
+- [ ] 实机验收：登录/游客 → 装备预览变色 → 确认页 → RIFT RELAY → 赛后页 REMATCH/返回大厅 → 大厅显示上局发布状态。
+- [ ] 对着运行中的 web3-fps-assets 后端用 live 模式验证 entitlement-check 与 /internal/v1/matches 的真实往返（本机只做了 schema 对齐）。
+- [ ] 战斗内武器切换（数字键）仍未实现；六把武器目前只有定义与 Prefab。
+
 ## 手感与契约对齐 v1.8.0
 
 - [x] 输入驱动先于 Motor/武器执行并同帧应用视角旋转，消除移动与射击方向落后一帧的问题。

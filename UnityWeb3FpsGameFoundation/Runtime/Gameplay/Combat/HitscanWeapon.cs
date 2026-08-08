@@ -84,6 +84,24 @@ namespace Web3Fps.GameFoundation.Gameplay.Combat
             AmmoChanged?.Invoke();
         }
 
+        // Combat numbers come only from the server-approved WeaponDefinition catalog;
+        // NFT skin content must never reach this method.
+        public void ApplyDefinition(WeaponDefinition definition)
+        {
+            if (definition == null) throw new ArgumentNullException(nameof(definition));
+            damage = Mathf.Max(0.1f, definition.damage);
+            range = Mathf.Max(1f, definition.range);
+            roundsPerSecond = Mathf.Max(0.1f, definition.roundsPerSecond);
+            hipSpreadDegrees = Mathf.Max(0f, definition.hipSpreadDegrees);
+            aimSpreadDegrees = Mathf.Max(0f, definition.aimSpreadDegrees);
+            movementSpreadDegrees = Mathf.Max(0f, definition.movementSpreadDegrees);
+            bloomPerShotDegrees = Mathf.Max(0f, definition.bloomPerShotDegrees);
+            maximumBloomDegrees = Mathf.Max(0f, definition.maximumBloomDegrees);
+            bloomRecoveryPerSecond = Mathf.Max(0f, definition.bloomRecoveryPerSecond);
+            _ammo = null;
+            ConfigureAmmo(definition.magazineCapacity, definition.reserveAmmo, definition.reloadSeconds);
+        }
+
         public void SetHandlingState(float movementAmount, bool aimHeld)
         {
             _movementAmount = Mathf.Clamp01(movementAmount);

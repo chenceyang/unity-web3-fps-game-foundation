@@ -20,6 +20,7 @@ namespace Web3Fps.GameFoundation.Server
         public string requestedTokenId = string.Empty;
         public string resolvedTokenId = string.Empty;
         public uint skinDefId;
+        public string contentHash = string.Empty;
         public string resolution = "default";
         public string reason = string.Empty;
 

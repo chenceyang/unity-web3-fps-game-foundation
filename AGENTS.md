@@ -31,4 +31,4 @@ Unity + C# 的 Web3 FPS 游戏侧底层包；实时战斗与 Web3 资产/奖励/
 
 ## 当前状态与下一步
 
-v1.7.0 已包含可生成的 UI Toolkit 大厅、RIFT RELAY 本地战斗垂直切片、骨骼角色/第一人称手臂、分区命中、枪械表现和战术 Bot；静态 Runtime/Editor/Tests 编译及 53 项测试通过。源码现为 v1.8.0：修复移动/瞄准手感与逐帧 GC 卡顿源，并把 `Game.Web3`/赛事层对齐到现役 web3-fps-assets 契约（详见 CHANGELOG）；**v1.8.0 尚未运行任何静态审计或 Unity 验证（本机为 macOS，无审计环境），61 个测试用例待验证**。下一步先在有 Unity 的环境跑静态审计 + Test Runner + 实机验收，再接入联网与真实后端。详见根 `README.md`。
+v1.7.0 已包含可生成的 UI Toolkit 大厅、RIFT RELAY 本地战斗垂直切片、骨骼角色/第一人称手臂、分区命中、枪械表现和战术 Bot；静态 Runtime/Editor/Tests 编译及 53 项测试通过。源码现为 v1.9.0：v1.8.0 修复移动/瞄准手感与逐帧 GC 卡顿源并对齐 `Game.Web3` 契约；v1.9.0 接线权威边界（本地进程扮演专用服务器角色：开局 entitlement 冻结 → 战斗零 gateway 调用 → 结算哈希发布，DTO 已逐字段对齐真实后端）、NFT 皮肤目录/应用器、登录/匹配确认/资产详情/赛后四页与六把武器定义（详见 CHANGELOG）；**v1.8.0 与 v1.9.0 均未运行任何静态审计或 Unity 验证（本机为 macOS，无审计环境），115 个测试用例待验证**。下一步先在有 Unity 的环境跑静态审计 + Test Runner + 实机验收，再接入联网 SDK。详见根 `README.md`。

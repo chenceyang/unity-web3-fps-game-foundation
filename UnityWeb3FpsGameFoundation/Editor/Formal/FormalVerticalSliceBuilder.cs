@@ -14,6 +14,7 @@ using Web3Fps.GameFoundation.Gameplay;
 using Web3Fps.GameFoundation.Gameplay.Combat;
 using Web3Fps.GameFoundation.Lobby;
 using Web3Fps.GameFoundation.Prototype;
+using Web3Fps.GameFoundation.Server;
 using Object = UnityEngine.Object;
 
 namespace Web3Fps.GameFoundation.Editor
@@ -31,6 +32,7 @@ namespace Web3Fps.GameFoundation.Editor
         private const string RelayScene = Scenes + "/RiftRelay.unity";
         private const string LobbyUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerLobby.uxml";
         private const string CombatUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerCombatHud.uxml";
+        private const string PostMatchUxml = "Packages/com.web3fps.game-foundation/Runtime/Formal/UI/AshLedgerPostMatch.uxml";
         private const string BackdropTexture = "Packages/com.web3fps.game-foundation/Runtime/Formal/Art/RiftRelayOrbitalBackdrop.png";
         private const string ArmorTexture = "Packages/com.web3fps.game-foundation/Runtime/Formal/Art/OperatorArmorSurface.png";
         private const string CobaltCharacterFbx = "Packages/com.web3fps.game-foundation/Runtime/Formal/ThirdParty/Quaternius/Characters/BlueSoldier_Male.fbx";
@@ -114,12 +116,20 @@ namespace Web3Fps.GameFoundation.Editor
             };
         }
 
+        // Order must match FormalContentCatalog.LaunchWeapons; index 0 stays the
+        // KESTREL-7 used by the view model and the bot.
         private static GameObject[] CreateWeaponPrefabs(IReadOnlyDictionary<string, Material> palette)
         {
             return new[]
             {
                 CreateWeapon("KESTREL-7", new Vector3(1.18f, 0.18f, 0.16f), palette["cobalt"], palette["graphite"], palette["bone"], true),
                 CreateWeapon("PULSE-9", new Vector3(0.82f, 0.22f, 0.18f), palette["coral"], palette["graphite"], palette["bone"], true),
+                CreateWeapon("WITNESS", new Vector3(1.42f, 0.15f, 0.14f), palette["aurora"], palette["graphite"], palette["bone"], true,
+                    root => AddWitnessDetail(root, palette)),
+                CreateWeapon("BREACH-12", new Vector3(0.98f, 0.24f, 0.2f), palette["copper"], palette["graphite"], palette["bone"], true,
+                    root => AddBreachDetail(root, palette)),
+                CreateWeapon("ANCHOR", new Vector3(1.3f, 0.26f, 0.2f), palette["warmGlow"], palette["graphite"], palette["bone"], true,
+                    root => AddAnchorDetail(root, palette)),
                 CreateWeapon("RELAY-3", new Vector3(0.58f, 0.17f, 0.13f), palette["aurora"], palette["graphite"], palette["bone"], false)
             };
         }
@@ -130,7 +140,8 @@ namespace Web3Fps.GameFoundation.Editor
             Material accent,
             Material dark,
             Material shell,
-            bool stock)
+            bool stock,
+            Action<Transform> detail = null)
         {
             var root = new GameObject(name);
             CreatePart("Receiver", Vector3.zero, receiverScale, shell, root.transform);
@@ -147,9 +158,43 @@ namespace Web3Fps.GameFoundation.Editor
                 CreatePart("StockArm", new Vector3(-receiverScale.x * 0.67f, -0.015f, 0f), new Vector3(receiverScale.x * 0.34f, 0.08f, 0.11f), dark, root.transform);
                 CreatePart("StockPad", new Vector3(-receiverScale.x * 0.88f, -0.015f, 0f), new Vector3(0.12f, 0.28f, 0.15f), shell, root.transform);
             }
+            detail?.Invoke(root.transform);
+            // Weapon blockouts are pure visuals; a stray collider would shadow the
+            // explicit hit zones, so every part is stripped regardless of name.
+            foreach (var collider in root.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + name + ".prefab");
             Object.DestroyImmediate(root);
             return prefab;
+        }
+
+        // 细长导轨与档案刻度 silhouette per the FORMAL_CONTENT_DESIGN weapon table.
+        private static void AddWitnessDetail(Transform root, IReadOnlyDictionary<string, Material> palette)
+        {
+            CreatePrimitive("ScopeTube", PrimitiveType.Cylinder, new Vector3(-0.06f, 0.26f, 0f), new Vector3(0.09f, 0.26f, 0.09f), palette["graphite"], root, new Vector3(0f, 0f, 90f));
+            CreatePart("ScopeMountFront", new Vector3(0.12f, 0.19f, 0f), new Vector3(0.05f, 0.08f, 0.1f), palette["graphite"], root);
+            CreatePart("ScopeMountRear", new Vector3(-0.24f, 0.19f, 0f), new Vector3(0.05f, 0.08f, 0.1f), palette["graphite"], root);
+            CreatePrimitive("BarrelExtension", PrimitiveType.Cylinder, new Vector3(1.28f, 0.015f, 0f), new Vector3(0.05f, 0.18f, 0.05f), palette["graphite"], root, new Vector3(0f, 0f, 90f));
+            CreatePart("ArchiveGauge", new Vector3(0.42f, 0.03f, 0.085f), new Vector3(0.5f, 0.035f, 0.02f), palette["aurora"], root);
+        }
+
+        // 粗壮泵动结构 silhouette per the FORMAL_CONTENT_DESIGN weapon table.
+        private static void AddBreachDetail(Transform root, IReadOnlyDictionary<string, Material> palette)
+        {
+            CreatePart("PumpSlide", new Vector3(0.42f, -0.1f, 0f), new Vector3(0.32f, 0.13f, 0.17f), palette["bone"], root);
+            CreatePrimitive("MuzzleRing", PrimitiveType.Cylinder, new Vector3(0.83f, 0.015f, 0f), new Vector3(0.11f, 0.05f, 0.11f), palette["copper"], root, new Vector3(0f, 0f, 90f));
+            CreatePart("ShellRackA", new Vector3(-0.12f, 0.02f, 0.13f), new Vector3(0.06f, 0.06f, 0.05f), palette["copper"], root);
+            CreatePart("ShellRackB", new Vector3(-0.02f, 0.02f, 0.13f), new Vector3(0.06f, 0.06f, 0.05f), palette["copper"], root);
+            CreatePart("ShellRackC", new Vector3(0.08f, 0.02f, 0.13f), new Vector3(0.06f, 0.06f, 0.05f), palette["copper"], root);
+        }
+
+        // 外露散热片与弹鼓 silhouette per the FORMAL_CONTENT_DESIGN weapon table.
+        private static void AddAnchorDetail(Transform root, IReadOnlyDictionary<string, Material> palette)
+        {
+            CreatePart("HeatFinA", new Vector3(0.5f, 0.14f, 0f), new Vector3(0.05f, 0.1f, 0.24f), palette["graphite"], root);
+            CreatePart("HeatFinB", new Vector3(0.62f, 0.14f, 0f), new Vector3(0.05f, 0.1f, 0.24f), palette["graphite"], root);
+            CreatePart("HeatFinC", new Vector3(0.74f, 0.14f, 0f), new Vector3(0.05f, 0.1f, 0.24f), palette["graphite"], root);
+            CreatePrimitive("AmmoDrum", PrimitiveType.Cylinder, new Vector3(0.08f, -0.26f, 0f), new Vector3(0.26f, 0.09f, 0.26f), palette["slate"], root, new Vector3(90f, 0f, 0f));
+            CreatePart("ForwardGrip", new Vector3(0.52f, -0.19f, 0f), new Vector3(0.09f, 0.18f, 0.09f), palette["graphite"], root);
         }
 
         private static GameObject CreateFormalPlayerPrefab(
@@ -184,7 +229,8 @@ namespace Web3Fps.GameFoundation.Editor
 
             look.Configure(view);
             weapon.Configure("local-player", view, shotSink);
-            weapon.ConfigureAmmo(30, 120, 1.65f);
+            // Combat numbers come from the server-approved catalog, never from skins.
+            weapon.ApplyDefinition(FormalContentCatalog.FindWeapon("kestrel-7").definition);
             participant.Configure("local-player", "Cobalt", "cobalt", null, new MonoBehaviour[] { motor, look, input });
             input.Configure(participant, motor, look, weapon, view, null);
             var prefab = PrefabUtility.SaveAsPrefabAsset(source, Prefabs + "/CobaltOperator.prefab");
@@ -296,7 +342,8 @@ namespace Web3Fps.GameFoundation.Editor
         private static void ConfigureDocument(
             UIDocument document,
             PanelSettings panelSettings,
-            VisualTreeAsset visualTree)
+            VisualTreeAsset visualTree,
+            float sortingOrder = 20f)
         {
             if (visualTree == null) throw new InvalidOperationException("The generated UI document is missing its UXML asset.");
             document.enabled = false;
@@ -310,7 +357,7 @@ namespace Web3Fps.GameFoundation.Editor
             serialized.Update();
             serialized.FindProperty("m_PanelSettings").objectReferenceValue = panelSettings;
             serialized.FindProperty("sourceAsset").objectReferenceValue = visualTree;
-            serialized.FindProperty("m_SortingOrder").floatValue = 20f;
+            serialized.FindProperty("m_SortingOrder").floatValue = sortingOrder;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(document);
 
@@ -359,12 +406,19 @@ namespace Web3Fps.GameFoundation.Editor
             archiveOperator.transform.position = new Vector3(3.6f, fittedOperatorY + 0.08f, 1.2f);
             archiveOperator.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
+            // Two archive columns of three weapons; each display carries a skin
+            // applicator so equipping in the lobby recolors the preview.
+            var previewApplicators = new List<FormalSkinApplicator>(weapons.Count);
             for (var i = 0; i < weapons.Count; i++)
             {
                 var display = Object.Instantiate(weapons[i], root);
                 display.name += " // Archive Display";
-                display.transform.position = new Vector3(6.2f, 0.45f + i * 1.15f, 3.5f);
+                var column = i / 3;
+                display.transform.position = new Vector3(6.2f + column * 1.9f, 0.45f + (i % 3) * 1.15f, 3.5f + column * 0.7f);
                 display.transform.rotation = Quaternion.Euler(0f, 18f, 0f);
+                var applicator = display.AddComponent<FormalSkinApplicator>();
+                applicator.Configure(display.transform);
+                previewApplicators.Add(applicator);
             }
 
             var systems = new GameObject("AshLedgerLobbySystems");
@@ -375,8 +429,16 @@ namespace Web3Fps.GameFoundation.Editor
             lobby.Configure(bootstrap);
             var document = systems.AddComponent<UIDocument>();
             ConfigureDocument(document, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(LobbyUxml));
+            var login = systems.AddComponent<FormalLoginView>();
+            login.Configure(bootstrap, lobby, document);
+            var confirm = systems.AddComponent<FormalMatchConfirmView>();
+            confirm.Configure(bootstrap, lobby, document, FormalContentCatalog.RiftRelaySceneName);
+            var detail = systems.AddComponent<FormalAssetDetailView>();
+            detail.Configure(bootstrap, lobby, document);
             var view = systems.AddComponent<FormalLobbyView>();
-            view.Configure(lobby, document, FormalContentCatalog.RiftRelaySceneName, panelSettings);
+            view.Configure(
+                lobby, document, FormalContentCatalog.RiftRelaySceneName, panelSettings,
+                confirm, detail, previewApplicators.ToArray());
 
             SaveGeneratedScene(scene, LobbyScene);
         }
@@ -426,6 +488,8 @@ namespace Web3Fps.GameFoundation.Editor
             var viewMagazine = FindDescendant(held.transform, "Magazine");
             var weaponPresentation = held.AddComponent<FirstPersonWeaponPresentation>();
             weaponPresentation.Configure(playerWeapon, playerLook, held.transform, viewMagazine);
+            var viewModelSkin = held.AddComponent<FormalSkinApplicator>();
+            viewModelSkin.Configure(held.transform);
             var visualMuzzle = new GameObject("ViewModelMuzzle").transform;
             visualMuzzle.SetParent(aimSource, false);
             visualMuzzle.localPosition = new Vector3(0.31f, -0.2f, 1.48f);
@@ -442,12 +506,23 @@ namespace Web3Fps.GameFoundation.Editor
             var match = systems.AddComponent<PrototypeMatchController>();
             match.Configure(playerParticipant, botParticipant, 7, 300f, 2f, FormalContentCatalog.ModeId, FormalContentCatalog.MapId);
             playerInput.Configure(playerParticipant, playerMotor, playerLook, playerWeapon, aimSource, match);
+            var driver = systems.AddComponent<LocalAuthoritativeMatchDriver>();
+            driver.Configure(match, playerParticipant, viewModelSkin);
             var document = systems.AddComponent<UIDocument>();
             ConfigureDocument(document, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(CombatUxml));
             var hud = systems.AddComponent<FormalCombatHud>();
             hud.Configure(document, match, playerParticipant, panelSettings);
             var combatFx = systems.AddComponent<FormalCombatFx>();
             combatFx.Configure(playerWeapon, botController, visualMuzzle, palette["cobaltGlow"], palette["coralGlow"]);
+
+            var postMatch = new GameObject("PostMatchUI");
+            postMatch.transform.SetParent(root);
+            var postDocument = postMatch.AddComponent<UIDocument>();
+            ConfigureDocument(postDocument, panelSettings, AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(PostMatchUxml), 30f);
+            var postView = postMatch.AddComponent<FormalPostMatchView>();
+            postView.Configure(
+                postDocument, match, playerParticipant, driver,
+                FormalContentCatalog.LobbySceneName, panelSettings);
 
             SaveGeneratedScene(scene, RelayScene);
         }

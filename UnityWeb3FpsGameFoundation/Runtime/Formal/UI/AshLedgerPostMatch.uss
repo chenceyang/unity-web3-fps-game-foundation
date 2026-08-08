@@ -1,0 +1,11 @@
+.post-screen { display: none; flex-grow: 1; align-items: center; justify-content: center; background-color: rgba(3, 6, 9, 0.82); }
+.post-panel { width: 560px; padding: 34px 38px; background-color: rgba(8, 14, 18, 0.97); border-width: 1px; border-color: rgba(143, 164, 176, 0.34); border-top-width: 3px; border-top-color: rgb(87, 195, 143); }
+.post-kicker { font-size: 10px; letter-spacing: 3px; color: rgb(139, 157, 164); }
+.post-result { margin-top: 8px; font-size: 44px; letter-spacing: 5px; color: white; -unity-font-style: bold; }
+.post-line { margin-top: 10px; font-size: 13px; letter-spacing: 1px; color: rgb(222, 224, 218); }
+.post-divider { height: 1px; margin-top: 18px; margin-bottom: 6px; background-color: rgba(143, 164, 176, 0.34); }
+.post-status { margin-top: 10px; font-size: 11px; letter-spacing: 1px; color: rgb(101, 175, 224); white-space: normal; }
+.post-note { margin-top: 14px; font-size: 9px; letter-spacing: 1px; color: rgb(139, 157, 164); white-space: normal; }
+.post-actions { flex-direction: row; margin-top: 24px; }
+.post-button { min-width: 170px; height: 46px; margin-right: 12px; color: white; font-size: 13px; letter-spacing: 1px; background-color: rgba(22, 31, 38, 0.88); border-width: 1px; border-color: rgba(143, 164, 176, 0.34); }
+.post-primary { background-color: rgb(35, 104, 165); border-color: rgb(87, 158, 216); -unity-font-style: bold; }

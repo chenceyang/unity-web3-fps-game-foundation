@@ -20,7 +20,8 @@
 - 本地垂直切片已实现 UI Toolkit 大厅与战斗 HUD、RIFT RELAY 三路地图、骨骼角色与第一人称手臂、弹药/装填/后坐力/音效、分区伤害/出生保护、动态散布和具备视线/反应/记忆/侧移的 Bot。
 - Web3 侧已实现 Mock/HTTP 资产网关、confirmed loadout、赛事交易意图、AssetBundle 哈希校验、开局 entitlement 边界、结果哈希及发布去重/重试；所有 Web3 调用仍在战斗帧之外。
 - v1.7.0 尚未在 Unity 中重新执行场景生成器，也未完成 Test Runner 与一整局 Play Mode 验收；静态门禁不能替代该运行态验证。
-- 源码已推进至 `1.8.0`：移动/瞄准同帧化与坡道贴地、逐帧 GC 分配清理（骨骼保险缓存、机器人 NonAlloc 物理、战斗特效池化、HUD 变更检测）、`Game.Web3`/赛事层与现役 web3-fps-assets `api/openapi.yaml` 及 unity-sdk 逐字对齐（+`GetConfigAsync`、奖励状态机、单一赛事 intent 路由、`GetMatchAsync`）、全量确定性 `.meta` 与内置模块依赖声明。**1.8.0 尚未在任何机器上运行静态审计、Unity 编译或 Test Runner（61 个用例待验证），交付 ZIP 仍为 1.7.0。**
+- 源码已推进至 `1.8.0`：移动/瞄准同帧化与坡道贴地、逐帧 GC 分配清理（骨骼保险缓存、机器人 NonAlloc 物理、战斗特效池化、HUD 变更检测）、`Game.Web3`/赛事层与现役 web3-fps-assets `api/openapi.yaml` 及 unity-sdk 逐字对齐（+`GetConfigAsync`、奖励状态机、单一赛事 intent 路由、`GetMatchAsync`）、全量确定性 `.meta` 与内置模块依赖声明。**1.8.0 尚未在任何机器上运行静态审计、Unity 编译或 Test Runner，交付 ZIP 仍为 1.7.0。**
+- 源码已推进至 `1.9.0`：权威边界接入生成场景（`LocalAuthoritativeMatchDriver` 本地扮演专用服务器：开局 entitlement 冻结快照 → 战斗帧零 gateway 调用 → 结算哈希后发布一次，DTO 逐字段对齐真实 web3-fps-assets 后端）、NFT 皮肤目录与 MaterialPropertyBlock 应用路径（`VerifiedSkinBundleLoader` 获得调用点）、登录/匹配确认/资产详情/独立赛后四个 UI Toolkit 页面、六把武器的 `WeaponDefinition` 目录与三把新灰盒 Prefab。**1.9.0 同样未经任何 Unity 验证，115 个测试用例待验证。**
 - 版本历史与每版测试增量只保留在 `UnityWeb3FpsGameFoundation/CHANGELOG.md`。
 
 ## 尚未完成

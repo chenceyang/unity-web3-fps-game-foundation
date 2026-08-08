@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="AshLedgerPostMatch.uss" />
+    <ui:VisualElement name="post-root" class="post-screen">
+        <ui:VisualElement class="post-panel">
+            <ui:Label text="AFTER-ACTION // PUBLIC ARCHIVE" class="post-kicker" />
+            <ui:Label name="post-result-label" text="VICTORY" class="post-result" />
+            <ui:Label name="post-score-label" text="COBALT 0 // 0 CORAL" class="post-line" />
+            <ui:Label name="post-placement-label" text="PLACEMENT #1" class="post-line" />
+            <ui:VisualElement class="post-divider" />
+            <ui:Label name="post-publish-label" text="RESULT PUBLISH PENDING…" class="post-status" />
+            <ui:Label name="post-attest-label" text="PUBLIC VERIFICATION RUNS ASYNCHRONOUSLY." class="post-status" />
+            <ui:Label text="VERIFICATION DELAYS NEVER HIDE THE SCOREBOARD OR BLOCK THE NEXT MATCH." class="post-note" />
+            <ui:VisualElement class="post-actions">
+                <ui:Button name="rematch-button" text="REMATCH" class="post-button post-primary" />
+                <ui:Button name="lobby-button" text="BACK TO LOBBY" class="post-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

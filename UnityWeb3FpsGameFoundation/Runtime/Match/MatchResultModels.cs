@@ -19,7 +19,9 @@ namespace Web3Fps.GameFoundation.Match
     [Serializable]
     public sealed class MatchRewardSlot
     {
-        public string slot = string.Empty;
+        // uint8 in the backend schema and the on-chain requestId encoding
+        // (backend/src/routes/matches.ts): an integer, never a string.
+        public int slot;
         public string playerId = string.Empty;
         public string rewardId = string.Empty;
     }
