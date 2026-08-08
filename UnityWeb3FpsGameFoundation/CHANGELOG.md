@@ -2,7 +2,7 @@
 
 ## 1.9.1 - 2026-08-09
 
-- Made formal armor and orbital-backdrop textures optional at generation time. If Unity has not imported a packaged PNG yet, the generator now creates readable color-fallback materials and logs a warning instead of aborting the entire vertical-slice build.
+- Retained the v1.7.4 RIFT RELAY orbital combat environment in v1.9.1. The generator now forces one synchronous import of packaged armor/backdrop PNGs before using a readable color fallback, so updating an embedded package while Unity is open no longer silently loses the cosmic vista or aborts the build.
 - Merged the Windows-validated v1.7.4 character-stability fix into the v1.9 feature line without removing its authoritative match, Web3, UI or six-weapon additions.
 - Stopped instantiating the Quaternius skeletal FBX assets in generated gameplay scenes after their imported animation hierarchy repeatedly produced invalid bounds and giant geometry at runtime. The files remain packaged as replaceable CC0 reference assets.
 - Replaced the generated bot, lobby preview and first-person arms with stable modular geometry and added procedural stride, bob, recoil and death presentation.

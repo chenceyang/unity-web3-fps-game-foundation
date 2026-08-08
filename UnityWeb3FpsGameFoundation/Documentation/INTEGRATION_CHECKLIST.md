@@ -6,7 +6,7 @@
 - [x] Bot 与大厅预览改用模块化角色；第一人称手臂改用稳定程序化模型，并保留行走、后坐力和死亡反馈。
 - [x] 新增程序化动作 EditMode 覆盖；保留 v1.9.0 权威边界、Web3 页面和六武器实现。
 - [x] Unity 6000.3.21f1 引用程序集完成 Runtime/Editor/Tests 编译，静态执行器 117/117 项测试通过。
-- [x] 材质/背景 PNG 尚未导入或缺失时使用可读颜色回退并记录警告，不再中断整个场景生成流程。
+- [x] 保留 v1.7.4 的 RIFT RELAY 宇宙轨道战斗背景；材质/背景 PNG 尚未导入时先强制同步导入一次，确实缺失才使用可读颜色回退并记录警告。
 - [x] 包源码镜像同步到 `work/UnityWeb3FpsGameFoundation-v1.4/Packages/com.web3fps.game-foundation`。
 - [ ] 在 Unity 中重新生成 `AshLedgerLobby`/`RiftRelay`，执行 Test Runner 并完成整局 Play Mode 验收。
 
