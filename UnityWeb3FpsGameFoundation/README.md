@@ -73,11 +73,11 @@ GUID 的 `.meta` 文件（由 `tools/generate_unity_metas.py` 生成）；新增
 
 当前生成内容包括 UI Toolkit 正式大厅（登录、匹配确认、资产详情覆盖层）、战斗 HUD 与独立赛后页、
 Mock Web3 状态绑定、RIFT RELAY 三路灰盒地图、全部六把武器 Prefab（KESTREL-7/PULSE-9/WITNESS/
-BREACH-12/ANCHOR/RELAY-3，战斗内切换尚未实现）、Quaternius CC0 骨骼角色、独立 `.anim` 资产和骨骼第一人称手臂。
+BREACH-12/ANCHOR/RELAY-3，战斗内切换尚未实现）、稳定的模块化低多边形角色、程序化动作和第一人称手臂。
 装备 confirmed 皮肤会即时改变大厅陈列武器与战斗第一人称武器的颜色（仅视觉，不改任何战斗数值）。
 本地战斗已接通 30/120 弹药、装填、弹匣/枪械/相机后坐力、原创合成音效、视觉弹道、表面弹着、
 头/躯干/腿分区伤害、出生保护、动态散布，以及带视线/反应/记忆/距离控制/侧移的 Bot。
-生成器会选择当前 Built-in/URP/HDRP 对应 Shader，持久化 UI Toolkit 引用，并用运行时骨骼包围盒保险处理异常动画。
+生成器会选择当前 Built-in/URP/HDRP 对应 Shader，并持久化 UI Toolkit 引用。Quaternius CC0 FBX 仅作为可替换参考资产保留，不再由生成场景实例化。
 所有生成资产位于项目 `Assets/AshLedgerVerticalSlice/`，可以继续编辑；完整版本历史见 `CHANGELOG.md`。
 整体参考低多边形生存 FPS 的清晰轮廓与简洁反馈，但不复制 Unturned 的模型、动画、纹理或音频。
 角色和建筑仍是可继续替换的低多边形制作资产，并非写实 AAA 高精度模型；背景视觉已作为实际场景资源接入。
@@ -186,9 +186,10 @@ Unity 不签名、不托管钱包，也不直接调用 `TournamentEscrow`。`ITo
 
 截至 2026-08-06，v1.0 运行时程序集和测试程序集已在 Unity 6000.3.21f1 编译；纯 C# 审计通过。
 v1.7.0 的静态审计（Unity 6000.3.21f1 自带 Roslyn 编译三个程序集 + 静态执行器）通过了当时的 53 个测试；
-该结果不替代 Unity Editor/Test Runner。v1.8.0 与 v1.9.0 在本机（macOS，无 Unity/审计环境）**尚未运行任何
-静态审计或 Test Runner**：当前定义了 115 个 EditMode 测试用例（含参数化用例），必须在下一次 Unity
-会话中验证编译与全部用例，再做实机验收。联网和真实后端的端到端验收尚未完成。
+该结果不替代 Unity Editor/Test Runner。v1.9.1 已把 v1.7.4 的角色稳定性方案合入 v1.9 功能线，并新增
+程序化角色动作测试；Unity 6000.3.21f1 引用编译和静态执行器已通过 117/117 项测试。隔离 Unity Test Runner
+因本机缺少 `com.unity.editor.headless` 许可无法启动，仍须在已授权的交互式 Unity 中运行全部 EditMode 用例、
+重建两张场景并完成一整局 Play Mode 验收。联网和真实后端的端到端验收尚未完成。
 
 ## 明确不包含
 

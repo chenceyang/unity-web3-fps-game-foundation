@@ -18,8 +18,8 @@ namespace Game.Web3
     /// </summary>
     public sealed class MockTournamentGateway : ITournamentGateway
     {
-        private readonly Dictionary<string, TournamentDetail> _tournaments = new();
-        private readonly Dictionary<string, MatchRecord> _matches = new();
+        private readonly Dictionary<string, TournamentDetail> _tournaments = new Dictionary<string, TournamentDetail>();
+        private readonly Dictionary<string, MatchRecord> _matches = new Dictionary<string, MatchRecord>();
 
         public int LatencyMs { get; set; } = 250;
 
@@ -92,13 +92,11 @@ namespace Game.Web3
             }
 
             // 与真后端一样做可行性预检；最终约束仍在合约
-            var allowed = action switch
-            {
-                TournamentAction.Register or TournamentAction.Sponsor => t.status == TournamentStatus.Open,
-                TournamentAction.ClaimPrize => t.status == TournamentStatus.Settled,
-                TournamentAction.ClaimRefund => t.status == TournamentStatus.Cancelled,
-                _ => false,
-            };
+            var allowed = (action == TournamentAction.Register || action == TournamentAction.Sponsor)
+                ? t.status == TournamentStatus.Open
+                : action == TournamentAction.ClaimPrize
+                    ? t.status == TournamentStatus.Settled
+                    : action == TournamentAction.ClaimRefund && t.status == TournamentStatus.Cancelled;
 
             if (!allowed)
             {
@@ -132,7 +130,7 @@ namespace Game.Web3
             if (FailureToInject != null) throw FailureToInject;
         }
 
-        private static TournamentSummary ToSummary(TournamentDetail t) => new()
+        private static TournamentSummary ToSummary(TournamentDetail t) => new TournamentSummary
         {
             tournamentId = t.tournamentId,
             title = t.title,
@@ -147,9 +145,9 @@ namespace Game.Web3
         };
 
         private static Amount Mon(string wei, string formatted) =>
-            new() {wei = wei, formatted = formatted, symbol = "MON"};
+            new Amount {wei = wei, formatted = formatted, symbol = "MON"};
 
-        private static TournamentDetail Base(string id, string title, string status) => new()
+        private static TournamentDetail Base(string id, string title, string status) => new TournamentDetail
         {
             tournamentId = id,
             title = title,

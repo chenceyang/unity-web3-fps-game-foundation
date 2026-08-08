@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using UnityEngine;
 
 namespace Web3Fps.GameFoundation.Server
@@ -51,14 +52,21 @@ namespace Web3Fps.GameFoundation.Server
             if (request == null) throw new ArgumentNullException(nameof(request));
             var tokens = new string[request.tokenIdsBySlot.Length];
             for (var i = 0; i < tokens.Length; i++) tokens[i] = request.tokenIdsBySlot[i] ?? string.Empty;
-            return JsonUtility.ToJson(new EntitlementWireRequest
+            var json = new StringBuilder();
+            json.Append("{\"playerId\":\"").Append(Escape(request.playerId));
+            json.Append("\",\"matchId\":\"").Append(Escape(request.matchId));
+            json.Append("\",\"wallet\":\"").Append(Escape(request.wallet ?? string.Empty));
+            json.Append("\",\"tokenIds\":[");
+            for (var i = 0; i < tokens.Length; i++)
             {
-                playerId = request.playerId,
-                matchId = request.matchId,
-                wallet = request.wallet ?? string.Empty,
-                tokenIds = tokens
-            });
+                if (i > 0) json.Append(',');
+                json.Append('"').Append(Escape(tokens[i])).Append('"');
+            }
+            return json.Append("]}").ToString();
         }
+
+        private static string Escape(string value) =>
+            (value ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
 
         // The backend response omits matchId/playerId/wallet/createdAt; they are echoed
         // from the request so LoadoutSnapshotResolver can validate snapshot identity.

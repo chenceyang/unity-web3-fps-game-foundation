@@ -11,4 +11,4 @@ License: Creative Commons CC0 1.0 Universal. The source author states that the F
 
 License deed: <https://creativecommons.org/publicdomain/zero/1.0/>
 
-The files are intentionally kept under `ThirdParty` so they can be replaced without changing gameplay code. No Unturned models, animations, textures or audio are included.
+The files are intentionally kept under `ThirdParty` as replaceable reference assets. Generated v1.9.1 scenes do not instantiate them: repeated imported-hierarchy bounds failures made them unsuitable for this runtime path, so gameplay uses stable modular operators until a production rig is supplied. No Unturned models, animations, textures or audio are included.

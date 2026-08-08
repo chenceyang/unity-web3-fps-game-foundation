@@ -136,8 +136,8 @@ namespace Web3Fps.GameFoundation.Formal
             if (driver != null && driver.PublishReport != null) OnPublishCompleted(driver.PublishReport);
             _visible = true;
             _root.style.display = DisplayStyle.Flex;
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
         }
 
         private void OnPublishCompleted(LocalMatchPublishReport report)

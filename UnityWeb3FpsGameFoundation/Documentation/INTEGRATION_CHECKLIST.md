@@ -1,5 +1,14 @@
 # Unity 集成检查单
 
+## 角色稳定性与权威边界 v1.9.1
+
+- [x] 合并 v1.7.4 的 Windows 角色稳定性修复：生成场景不实例化第三方骨骼 FBX，避免异常包围盒与巨大化几何。
+- [x] Bot 与大厅预览改用模块化角色；第一人称手臂改用稳定程序化模型，并保留行走、后坐力和死亡反馈。
+- [x] 新增程序化动作 EditMode 覆盖；保留 v1.9.0 权威边界、Web3 页面和六武器实现。
+- [x] Unity 6000.3.21f1 引用程序集完成 Runtime/Editor/Tests 编译，静态执行器 117/117 项测试通过。
+- [x] 包源码镜像同步到 `work/UnityWeb3FpsGameFoundation-v1.4/Packages/com.web3fps.game-foundation`。
+- [ ] 在 Unity 中重新生成 `AshLedgerLobby`/`RiftRelay`，执行 Test Runner 并完成整局 Play Mode 验收。
+
 ## 权威边界落地与四页补全 v1.9.0
 
 - [x] `LocalAuthoritativeMatchDriver` 在本地切片中扮演专用服务器：确认页在进战斗场景前冻结 entitlement 快照，战斗帧零网关调用，结束后经 `MatchPublishCoordinator` 发布一次并把 published/duplicate/conflict/failed 显示到赛后页与大厅；`AuthoritativeMatchSession` 保留给联网阶段（服务器同时拥有逐击杀计分）。
@@ -11,7 +20,7 @@
 - [x] NFT 外观目录：`FormalSkinCatalog` 覆盖后端目录与 SeedSkins.s.sol 的全部 skinDefId，未知 id 落中性默认；`FormalSkinApplicator` 仅经 MaterialPropertyBlock 改视觉；`VerifiedSkinBundleLoader` 获得调用点，hash 不符降级默认外观并告警。
 - [x] `WeaponDefinition` 目录承载六把武器的服务器数值并可写入 `HitscanWeapon`；生成器新增 WITNESS/BREACH-12/ANCHOR 灰盒 Prefab 与大厅陈列。
 - [x] `GameFoundationBootstrap` 的 mock/live 开关同时组合 entitlement 网关、结果发布器与登录客户端；service token 仅内存注入且仅在本进程扮演服务器角色时有意义。
-- [ ] 在 Unity 6000.3.21f1 重新运行静态审计与 Test Runner（115 个用例），v1.9.0 尚未经任何 Unity 验证。
+- [ ] 在 Unity 6000.3.21f1 重新运行 Test Runner，并人工验收 v1.9.1 生成场景。
 - [ ] 实机验收：登录/游客 → 装备预览变色 → 确认页 → RIFT RELAY → 赛后页 REMATCH/返回大厅 → 大厅显示上局发布状态。
 - [ ] 对着运行中的 web3-fps-assets 后端用 live 模式验证 entitlement-check 与 /internal/v1/matches 的真实往返（本机只做了 schema 对齐）。
 - [ ] 战斗内武器切换（数字键）仍未实现；六把武器目前只有定义与 Prefab。

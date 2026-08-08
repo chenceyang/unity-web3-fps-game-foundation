@@ -12,10 +12,6 @@ namespace Web3Fps.GameFoundation.Formal
     [DisallowMultipleComponent]
     public sealed class FormalSkinApplicator : MonoBehaviour
     {
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-        private static readonly int ColorId = Shader.PropertyToID("_Color");
-        private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
-
         [SerializeField] private Transform target;
 
         private MaterialPropertyBlock _block;
@@ -34,16 +30,19 @@ namespace Web3Fps.GameFoundation.Formal
             AppliedSpec = spec;
             var root = target != null ? target : transform;
             if (_block == null) _block = new MaterialPropertyBlock();
+            var baseColorId = Shader.PropertyToID("_BaseColor");
+            var colorId = Shader.PropertyToID("_Color");
+            var emissionColorId = Shader.PropertyToID("_EmissionColor");
             var renderers = root.GetComponentsInChildren<Renderer>(true);
             for (var i = 0; i < renderers.Length; i++)
             {
                 var renderer = renderers[i];
                 var color = ResolvePartColor(renderer.name, spec);
                 _block.Clear();
-                _block.SetColor(BaseColorId, color);
-                _block.SetColor(ColorId, color);
+                _block.SetColor(baseColorId, color);
+                _block.SetColor(colorId, color);
                 if (spec.HasEmission && IsAccentPart(renderer.name))
-                    _block.SetColor(EmissionColorId, spec.emissionColor * spec.emissionIntensity);
+                    _block.SetColor(emissionColorId, spec.emissionColor * spec.emissionIntensity);
                 renderer.SetPropertyBlock(_block);
             }
         }

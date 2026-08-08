@@ -55,20 +55,47 @@ namespace Web3Fps.GameFoundation.Auth
         {
             if (!IsValidPlayerId(playerId))
                 throw new ArgumentException("playerId may contain letters, digits, _ . - (max 64)", nameof(playerId));
-            return JsonUtility.ToJson(new LoginRequest { playerId = playerId });
+            return "{\"playerId\":\"" + EscapeJsonString(playerId) + "\"}";
         }
 
         public static string ParseAccessToken(string responseJson)
         {
-            LoginResponse response = null;
-            if (!string.IsNullOrWhiteSpace(responseJson))
-            {
-                try { response = JsonUtility.FromJson<LoginResponse>(responseJson); }
-                catch { response = null; }
-            }
-            if (response == null || string.IsNullOrWhiteSpace(response.accessToken))
+            var accessToken = ReadJsonString(responseJson, "accessToken");
+            if (string.IsNullOrWhiteSpace(accessToken))
                 throw new InvalidOperationException("Demo login returned no accessToken");
-            return response.accessToken;
+            return accessToken;
+        }
+
+        private static string EscapeJsonString(string value)
+        {
+            return (value ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        private static string ReadJsonString(string json, string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            var marker = "\"" + propertyName + "\"";
+            var markerIndex = json.IndexOf(marker, StringComparison.Ordinal);
+            if (markerIndex < 0) return null;
+            var colon = json.IndexOf(':', markerIndex + marker.Length);
+            if (colon < 0) return null;
+            var start = json.IndexOf('"', colon + 1);
+            if (start < 0) return null;
+            var result = new StringBuilder();
+            var escaped = false;
+            for (var i = start + 1; i < json.Length; i++)
+            {
+                var ch = json[i];
+                if (escaped)
+                {
+                    result.Append(ch == 'n' ? '\n' : ch == 'r' ? '\r' : ch == 't' ? '\t' : ch);
+                    escaped = false;
+                }
+                else if (ch == '\\') escaped = true;
+                else if (ch == '"') return result.ToString();
+                else result.Append(ch);
+            }
+            return null;
         }
     }
 

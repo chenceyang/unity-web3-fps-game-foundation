@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.1 - 2026-08-09
+
+- Merged the Windows-validated v1.7.4 character-stability fix into the v1.9 feature line without removing its authoritative match, Web3, UI or six-weapon additions.
+- Stopped instantiating the Quaternius skeletal FBX assets in generated gameplay scenes after their imported animation hierarchy repeatedly produced invalid bounds and giant geometry at runtime. The files remain packaged as replaceable CC0 reference assets.
+- Replaced the generated bot, lobby preview and first-person arms with stable modular geometry and added procedural stride, bob, recoil and death presentation.
+- Added EditMode coverage for idle motion and recoil decay. Unity 6000.3.21f1 reference compilation and the static runner pass 117/117 tests; the isolated Unity Test Runner launch was blocked by a missing `com.unity.editor.headless` license, so interactive scene regeneration and Play Mode acceptance remain required.
+- Fixed previously unverified v1.9 compile/audit blockers: removed unsupported preview syntax from mock gateways, restored the `AsyncOperation` namespace, disambiguated `UnityEngine.Cursor`, and made request JSON plus cosmetic classification testable without native Unity internal calls.
+
 ## 1.9.0 - 2026-08-08
 
 - Wired the authoritative boundary into the generated slice: the new `LocalAuthoritativeMatchDriver` plays the dedicated-server role locally (same philosophy as `LocalAuthoritativeShotSink`) — the lobby confirm step freezes the entitlement snapshot before the combat scene loads, combat makes zero gateway calls, and the finished result is hashed and published once with a lobby-visible published/duplicate/conflict/failed outcome; `AuthoritativeMatchSession` stays reserved for the networked phase where the server also owns per-kill scoring.

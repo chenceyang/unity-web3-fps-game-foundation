@@ -18,9 +18,9 @@ The command creates:
 - lobby archive displays and a first-person view model that recolor through the NFT skin catalog when a confirmed finish is equipped (visuals only, never combat numbers);
 - a combat-only HUD with live magazine/reserve ammo, reload state and hit feedback, with no wallet, token or chain status;
 - visual-only player and bot tracers that do not participate in authoritative damage;
-- CC0 skeletal soldier FBX characters with generated idle, locomotion, firing and death animation states;
+- stable modular low-poly operators with procedural locomotion, recoil and death presentation;
 - staged magazine reload motion, weapon/camera recoil and original synthesized weapon audio;
-- independently generated animation clips and a skeletal first-person arms view model with runtime bounds recovery;
+- a stable procedural first-person arms view model; packaged CC0 FBX files remain reference assets and are not instantiated by generated scenes;
 - head/torso/leg hit zones, spawn protection and deterministic movement/ADS/bloom accuracy;
 - a line-of-sight bot with reaction time, sight memory, range control and strafing;
 - Build Settings entries for both scenes.

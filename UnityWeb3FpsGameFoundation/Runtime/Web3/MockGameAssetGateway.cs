@@ -22,9 +22,9 @@ namespace Game.Web3
     /// </summary>
     public sealed class MockGameAssetGateway : IGameAssetGateway
     {
-        private readonly List<SkinItem> _items = new();
-        private readonly List<PendingReward> _pending = new();
-        private readonly Dictionary<string, RewardStatus> _rewardStates = new();
+        private readonly List<SkinItem> _items = new List<SkinItem>();
+        private readonly List<PendingReward> _pending = new List<PendingReward>();
+        private readonly Dictionary<string, RewardStatus> _rewardStates = new Dictionary<string, RewardStatus>();
 
         private string _wallet = string.Empty;
         private string _bindSessionId;

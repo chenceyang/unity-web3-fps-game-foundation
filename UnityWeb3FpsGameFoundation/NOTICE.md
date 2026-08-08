@@ -9,6 +9,7 @@ this project implementation.
 
 No private keys, wallet credentials or RPC secrets are included.
 
-The formal vertical slice includes two selected skeletal FBX character files from Quaternius'
-Ultimate Animated Character Pack under CC0 1.0 Universal. Their source, license and SHA-256
-records are documented in `Runtime/Formal/ThirdParty/Quaternius/README.md`.
+The package includes two selected skeletal FBX character files from Quaternius' Ultimate
+Animated Character Pack under CC0 1.0 Universal as replaceable reference assets. Generated
+v1.9.1 scenes do not instantiate them. Their source, license and SHA-256 records are documented
+in `Runtime/Formal/ThirdParty/Quaternius/README.md`.
