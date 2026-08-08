@@ -1083,7 +1083,7 @@ namespace Web3Fps.GameFoundation.Editor
         {
             var shader = ResolveLitShader();
             var material = new Material(shader) { color = color };
-            var texture = LoadFormalTexture(texturePath);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
             if (texture == null)
             {
                 Debug.LogWarning("Formal material texture is unavailable; using the authored color fallback: " + texturePath);
@@ -1102,7 +1102,7 @@ namespace Web3Fps.GameFoundation.Editor
         {
             var shader = ResolveUnlitShader();
             var material = new Material(shader) { color = new Color(0.035f, 0.055f, 0.075f) };
-            var texture = LoadFormalTexture(BackdropTexture);
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropTexture);
             if (texture == null)
             {
                 Debug.LogWarning("Formal backdrop texture is unavailable; using the dark-color fallback: " + BackdropTexture);
@@ -1117,20 +1117,6 @@ namespace Web3Fps.GameFoundation.Editor
             material.doubleSidedGI = true;
             AssetDatabase.CreateAsset(material, Materials + "/OrbitalVista.mat");
             return material;
-        }
-
-        private static Texture2D LoadFormalTexture(string assetPath)
-        {
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
-            if (texture != null) return texture;
-
-            // Embedded/local packages can be copied while the Editor is open. Force a
-            // synchronous import once so the v1.7.4 orbital combat vista is retained
-            // instead of being replaced by the emergency color fallback.
-            AssetDatabase.ImportAsset(
-                assetPath,
-                ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
         }
 
         private static Shader ResolveLitShader()
