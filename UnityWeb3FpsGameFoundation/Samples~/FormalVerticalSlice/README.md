@@ -5,13 +5,17 @@ This sample is generated from the package so that its scenes, materials and pref
 1. Import this sample or leave it unimported; the generator itself is already available from the package.
 2. Run `Tools > Web3 FPS > Create ASH LEDGER Vertical Slice`.
 3. Open `Assets/AshLedgerVerticalSlice/Scenes/AshLedgerLobby.unity` and press Play.
-4. Select `DEPLOY TO RIFT RELAY` to enter the generated local combat scene.
+4. Enter through the demo login/guest overlay, then select `DEPLOY TO RIFT RELAY`; the
+   matchmaking-confirm page freezes the entitlement snapshot before loading combat, and the
+   standalone post-match page offers REMATCH or BACK TO LOBBY afterwards.
 
 The command creates:
 
-- a UI Toolkit lobby connected to the mock NFT, wallet, reward and tournament services;
+- a UI Toolkit lobby connected to the mock NFT, wallet, reward and tournament services, with login, matchmaking-confirm and asset-detail overlays plus a standalone post-match page;
+- a local authoritative match driver that freezes cosmetics before combat, keeps combat free of Web3 calls and publishes the finished result once with a visible outcome;
 - an editable RIFT RELAY arena blockout;
-- KESTREL-7, PULSE-9 and RELAY-3 blockout prefabs;
+- all six weapon blockout prefabs (KESTREL-7, PULSE-9, WITNESS, BREACH-12, ANCHOR, RELAY-3) with server-defined `WeaponDefinition` stats; in-match switching is not implemented yet;
+- lobby archive displays and a first-person view model that recolor through the NFT skin catalog when a confirmed finish is equipped (visuals only, never combat numbers);
 - a combat-only HUD with live magazine/reserve ammo, reload state and hit feedback, with no wallet, token or chain status;
 - visual-only player and bot tracers that do not participate in authoritative damage;
 - CC0 skeletal soldier FBX characters with generated idle, locomotion, firing and death animation states;

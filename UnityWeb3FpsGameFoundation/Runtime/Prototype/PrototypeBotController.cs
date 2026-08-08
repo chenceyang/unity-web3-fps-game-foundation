@@ -29,6 +29,11 @@ namespace Web3Fps.GameFoundation.Prototype
         [SerializeField, Min(0f)] private float aimSpreadDegrees = 2.1f;
         [SerializeField] private LayerMask sightMask = ~(1 << 2);
 
+        // Shared scratch buffer for the per-frame sight/steering casts. Bots update
+        // sequentially on the main thread, and the allocating RaycastAll/SphereCastAll
+        // variants were a steady per-frame garbage source that caused GC hitches.
+        private static readonly RaycastHit[] CastBuffer = new RaycastHit[24];
+
         private CharacterController _controller;
         private Health _health;
         private double _nextAttackAt;
@@ -139,10 +144,11 @@ namespace Web3Fps.GameFoundation.Prototype
         {
             if (_controller == null) return false;
             var origin = transform.position + Vector3.up * Mathf.Max(0.45f, _controller.radius);
-            var hits = Physics.SphereCastAll(origin, _controller.radius * 0.72f, direction, 1.35f, sightMask, QueryTriggerInteraction.Ignore);
-            foreach (var hit in hits)
+            var count = Physics.SphereCastNonAlloc(
+                origin, _controller.radius * 0.72f, direction, CastBuffer, 1.35f, sightMask, QueryTriggerInteraction.Ignore);
+            for (var i = 0; i < count; i++)
             {
-                var participant = hit.collider.GetComponentInParent<PrototypeParticipant>();
+                var participant = CastBuffer[i].collider.GetComponentInParent<PrototypeParticipant>();
                 if (participant == self || participant == target) continue;
                 return true;
             }
@@ -174,13 +180,7 @@ namespace Web3Fps.GameFoundation.Prototype
                 return;
             }
 
-            IDamageable damageable = null;
-            var behaviours = hit.collider.GetComponentsInParent<MonoBehaviour>();
-            for (var i = 0; i < behaviours.Length; i++)
-            {
-                damageable = behaviours[i] as IDamageable;
-                if (damageable != null) break;
-            }
+            var damageable = hit.collider.GetComponentInParent<IDamageable>();
             var applied = damageable != null && damageable.ApplyDamage(new DamageInfo
             {
                 Amount = damage,
@@ -199,18 +199,25 @@ namespace Web3Fps.GameFoundation.Prototype
             out PrototypeParticipant participant,
             out RaycastHit hit)
         {
-            var hits = Physics.RaycastAll(origin, direction, range, sightMask, QueryTriggerInteraction.Collide);
-            Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
-            for (var i = 0; i < hits.Length; i++)
+            var count = Physics.RaycastNonAlloc(origin, direction, CastBuffer, range, sightMask, QueryTriggerInteraction.Collide);
+            var bestDistance = float.MaxValue;
+            var bestIndex = -1;
+            for (var i = 0; i < count; i++)
             {
-                if (hits[i].collider.transform.IsChildOf(transform)) continue;
-                hit = hits[i];
-                participant = hit.collider.GetComponentInParent<PrototypeParticipant>();
-                return true;
+                if (CastBuffer[i].distance >= bestDistance) continue;
+                if (CastBuffer[i].collider.transform.IsChildOf(transform)) continue;
+                bestDistance = CastBuffer[i].distance;
+                bestIndex = i;
             }
-            hit = default;
-            participant = null;
-            return false;
+            if (bestIndex < 0)
+            {
+                hit = default;
+                participant = null;
+                return false;
+            }
+            hit = CastBuffer[bestIndex];
+            participant = hit.collider.GetComponentInParent<PrototypeParticipant>();
+            return true;
         }
     }
 

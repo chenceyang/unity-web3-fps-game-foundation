@@ -1,92 +1,79 @@
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Game.Web3;
-using UnityEngine;
-using UnityEngine.Networking;
 
-namespace Web3Fps.GameFoundation.Tournaments
+namespace Game.Web3
 {
+    /// <summary>
+    /// 赛事与对局存证的 REST 实现。契约见 api/openapi.yaml。
+    /// </summary>
     public sealed class HttpTournamentGateway : ITournamentGateway
     {
-        private readonly string _baseUrl;
-        private readonly Func<string> _tokenProvider;
-        private readonly int _timeoutSeconds;
+        private readonly HttpApiClient _http;
 
-        public HttpTournamentGateway(string baseUrl, Func<string> tokenProvider, int timeoutSeconds = 10)
+        public HttpTournamentGateway(string baseUrl, Func<string> accessTokenProvider, int timeoutSeconds = 10)
         {
-            if (string.IsNullOrWhiteSpace(baseUrl)) throw new ArgumentException("baseUrl is required", nameof(baseUrl));
-            _baseUrl = baseUrl.TrimEnd('/');
-            _tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
-            _timeoutSeconds = timeoutSeconds;
+            _http = new HttpApiClient(baseUrl, accessTokenProvider, timeoutSeconds);
         }
 
-        public Task<TournamentList> GetTournamentsAsync(CancellationToken ct = default)
-            => SendAsync<TournamentList>(UnityWebRequest.kHttpVerbGET, "/v1/tournaments", null, ct);
-
-        public Task<TournamentSummary> GetTournamentAsync(string tournamentId, CancellationToken ct = default)
-            => SendAsync<TournamentSummary>(UnityWebRequest.kHttpVerbGET, Path(tournamentId), null, ct);
-
-        public Task<TransactionIntent> BeginRegisterAsync(string tournamentId, CancellationToken ct = default)
-            => SendAsync<TransactionIntent>(UnityWebRequest.kHttpVerbPOST, Path(tournamentId) + "/register-intent", null, ct);
-
-        public Task<TransactionIntent> BeginSponsorAsync(string tournamentId, string amountWei, CancellationToken ct = default)
+        /// <summary>与资产网关共用同一个客户端。</summary>
+        public HttpTournamentGateway(HttpApiClient http)
         {
-            if (string.IsNullOrWhiteSpace(amountWei)) throw new ArgumentException("amountWei is required", nameof(amountWei));
-            return SendAsync<TransactionIntent>(UnityWebRequest.kHttpVerbPOST, Path(tournamentId) + "/sponsor-intent",
-                JsonUtility.ToJson(new SponsorIntentRequest { amountWei = amountWei }), ct);
+            _http = http ?? throw new ArgumentNullException(nameof(http));
         }
 
-        public Task<TransactionIntent> BeginClaimPrizeAsync(string tournamentId, CancellationToken ct = default)
-            => SendAsync<TransactionIntent>(UnityWebRequest.kHttpVerbPOST, Path(tournamentId) + "/claim-prize-intent", null, ct);
-
-        public Task<TransactionIntent> BeginClaimRefundAsync(string tournamentId, CancellationToken ct = default)
-            => SendAsync<TransactionIntent>(UnityWebRequest.kHttpVerbPOST, Path(tournamentId) + "/claim-refund-intent", null, ct);
-
-        public Task<TransactionStatus> PollTransactionAsync(string intentId, CancellationToken ct = default)
+        /// <remarks>
+        /// JsonUtility 无法反序列化根级数组，所以后端返回的是 {items, nextCursor} 对象。
+        /// </remarks>
+        [Serializable]
+        private class TournamentListResponse
         {
-            Require(intentId, nameof(intentId));
-            return SendAsync<TransactionStatus>(UnityWebRequest.kHttpVerbGET,
-                "/v1/transactions/" + UnityWebRequest.EscapeURL(intentId), null, ct);
+            public TournamentSummary[] items = Array.Empty<TournamentSummary>();
+            public string nextCursor;
         }
 
-        private async Task<T> SendAsync<T>(string method, string path, string body, CancellationToken ct) where T : class
+        public async Task<TournamentSummary[]> ListTournamentsAsync(
+            string status = null, CancellationToken ct = default)
         {
-            using (var request = new UnityWebRequest(_baseUrl + path, method))
+            var path = "/v1/tournaments";
+            if (!string.IsNullOrEmpty(status))
             {
-                request.downloadHandler = new DownloadHandlerBuffer();
-                request.timeout = _timeoutSeconds;
-                request.SetRequestHeader("Accept", "application/json");
-                var token = _tokenProvider();
-                if (!string.IsNullOrWhiteSpace(token)) request.SetRequestHeader("Authorization", "Bearer " + token);
-                if (body != null)
-                {
-                    request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
-                    request.SetRequestHeader("Content-Type", "application/json");
-                }
-
-                try { await request.SendWebRequest().AwaitAsync(ct); }
-                catch (OperationCanceledException) { throw; }
-                catch (Exception ex) { throw new TournamentGatewayException(method + " " + path + " failed", inner: ex); }
-
-                if (request.result != UnityWebRequest.Result.Success)
-                    throw new TournamentGatewayException(method + " " + path + " failed with HTTP " + request.responseCode,
-                        (int)request.responseCode, "http_error");
-                try { return JsonUtility.FromJson<T>(request.downloadHandler.text); }
-                catch (Exception ex) { throw new TournamentGatewayException("Invalid tournament response", (int)request.responseCode, "invalid_response", ex); }
+                path += "?status=" + HttpApiClient.Escape(status);
             }
+
+            var response = await _http.GetAsync<TournamentListResponse>(path, ct);
+            return response?.items ?? Array.Empty<TournamentSummary>();
         }
 
-        private static string Path(string tournamentId)
+        public Task<TournamentDetail> GetTournamentAsync(
+            string tournamentId, CancellationToken ct = default)
         {
             Require(tournamentId, nameof(tournamentId));
-            return "/v1/tournaments/" + UnityWebRequest.EscapeURL(tournamentId);
+            return _http.GetAsync<TournamentDetail>(
+                $"/v1/tournaments/{HttpApiClient.Escape(tournamentId)}", ct);
+        }
+
+        public Task<TournamentIntent> CreateIntentAsync(
+            string tournamentId, string action, CancellationToken ct = default)
+        {
+            Require(tournamentId, nameof(tournamentId));
+            Require(action, nameof(action));
+
+            return _http.PostAsync<TournamentIntent>(
+                $"/v1/tournaments/{HttpApiClient.Escape(tournamentId)}/intents/{HttpApiClient.Escape(action)}",
+                null,
+                ct);
+        }
+
+        public Task<MatchRecord> GetMatchAsync(string matchId, CancellationToken ct = default)
+        {
+            Require(matchId, nameof(matchId));
+            return _http.GetAsync<MatchRecord>($"/v1/matches/{HttpApiClient.Escape(matchId)}", ct);
         }
 
         private static void Require(string value, string name)
         {
-            if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException(name + " is required", name);
+            if (string.IsNullOrEmpty(value)) throw new ArgumentException($"{name} is required", name);
         }
     }
 }

@@ -37,8 +37,8 @@
 .section-title { font-size: 13px; letter-spacing: 2px; color: var(--bone); -unity-font-style: bold; }
 .section-gap { margin-top: 26px; }
 .body-copy { white-space: normal; color: var(--muted); font-size: 12px; margin-top: 8px; }
-.weapon-strip { flex-direction: row; margin-top: 28px; }
-.weapon-card { flex-grow: 1; min-height: 170px; margin-right: 12px; padding: 20px; justify-content: flex-end; background-color: var(--panel); border-top-width: 2px; border-top-color: var(--line); }
+.weapon-strip { flex-direction: row; flex-wrap: wrap; margin-top: 28px; }
+.weapon-card { width: 31%; min-height: 128px; margin-right: 12px; margin-bottom: 12px; padding: 20px; justify-content: flex-end; background-color: var(--panel); border-top-width: 2px; border-top-color: var(--line); }
 .weapon-name { font-size: 20px; letter-spacing: 2px; color: white; -unity-font-style: bold; }
 .safety-note { margin-top: 18px; padding: 14px; color: var(--verified); background-color: rgba(35, 86, 66, 0.38); font-size: 11px; }
 .data-list { margin-top: 18px; }
@@ -52,3 +52,17 @@
 .right-card, .proof-card { margin-top: 18px; padding: 18px; background-color: var(--panel-soft); border-width: 1px; border-color: var(--line); }
 .progress { height: 5px; margin-top: 15px; background-color: rgb(38, 45, 49); }
 .progress-fill { width: 58%; height: 5px; background-color: var(--coral); }
+.overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; align-items: center; justify-content: center; background-color: rgba(3, 6, 9, 0.88); }
+.hidden-overlay { display: none; }
+.overlay-card { width: 460px; padding: 30px 34px; background-color: var(--panel); border-width: 1px; border-color: var(--line); border-top-width: 3px; border-top-color: var(--cobalt); }
+.overlay-wide { width: 620px; }
+.overlay-title { font-size: 20px; letter-spacing: 3px; color: white; -unity-font-style: bold; }
+.overlay-line { margin-top: 10px; font-size: 12px; letter-spacing: 1px; color: var(--bone); white-space: normal; }
+.overlay-mono { color: var(--muted); font-size: 11px; }
+.overlay-copy { margin-top: 12px; }
+.overlay-field { margin-top: 18px; }
+.overlay-status { margin-top: 14px; font-size: 10px; letter-spacing: 1px; color: var(--verified); white-space: normal; }
+.overlay-warning { margin-top: 12px; font-size: 11px; letter-spacing: 1px; color: rgb(233, 178, 90); white-space: normal; }
+.overlay-actions { flex-direction: row; flex-wrap: wrap; margin-top: 20px; }
+.overlay-button { width: auto; min-width: 150px; height: 42px; margin-right: 10px; margin-bottom: 8px; }
+.slot-line { margin-top: 6px; padding: 10px 12px; font-size: 11px; letter-spacing: 1px; color: var(--bone); background-color: var(--panel-soft); border-left-width: 2px; border-left-color: var(--line); white-space: normal; }

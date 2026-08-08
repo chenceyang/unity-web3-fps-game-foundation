@@ -28,7 +28,9 @@ namespace Web3Fps.GameFoundation.Server
             CancellationToken ct = default)
         {
             if (entitlementRequest == null) throw new ArgumentNullException(nameof(entitlementRequest));
-            var body = Encoding.UTF8.GetBytes(JsonUtility.ToJson(entitlementRequest));
+            // Wire format is backend/src/routes/entitlement.ts: {playerId, matchId, wallet,
+            // tokenIds} in, EntitlementResult out; the mapper rebuilds the package snapshot.
+            var body = Encoding.UTF8.GetBytes(EntitlementWireMapper.ToRequestJson(entitlementRequest));
             using (var request = new UnityWebRequest(
                        _baseUrl + "/internal/v1/entitlement-check",
                        UnityWebRequest.kHttpVerbPOST))
@@ -45,9 +47,10 @@ namespace Web3Fps.GameFoundation.Server
                 await request.SendWebRequest().AwaitAsync(ct);
                 if (request.result != UnityWebRequest.Result.Success)
                     throw new InvalidOperationException("Entitlement check failed with HTTP " + request.responseCode);
-                var snapshot = JsonUtility.FromJson<PlayerLoadoutSnapshot>(request.downloadHandler.text);
-                if (snapshot == null) throw new InvalidOperationException("Entitlement backend returned invalid JSON");
-                return snapshot;
+                var response = JsonUtility.FromJson<EntitlementWireResponse>(request.downloadHandler.text);
+                if (response == null) throw new InvalidOperationException("Entitlement backend returned invalid JSON");
+                return EntitlementWireMapper.ToSnapshot(
+                    response, entitlementRequest, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
             }
         }
     }

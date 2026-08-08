@@ -1,8 +1,11 @@
 # Notice
 
 The `Game.Web3` gateway contract and DTO shape are compatible with the user-provided
-`timothyshen/web3-fps-assets` Unity SDK. The remaining game foundation, match serialization,
-tournament gateway, gameplay runtime and tests are supplied as this project implementation.
+`timothyshen/web3-fps-assets` Unity SDK. As of 1.8.0 the `Runtime/Web3` and gateway/model
+files under `Runtime/Tournaments` are verbatim mirrors of that SDK's `Runtime/` (including
+the chain-config endpoint, reward state machine and single tournament intent route); the
+remaining game foundation, match serialization, gameplay runtime and tests are supplied as
+this project implementation.
 
 No private keys, wallet credentials or RPC secrets are included.
 

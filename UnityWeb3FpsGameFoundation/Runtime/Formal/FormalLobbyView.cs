@@ -1,10 +1,13 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Game.Web3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using Web3Fps.GameFoundation.Assets;
 using Web3Fps.GameFoundation.Lobby;
-using Web3Fps.GameFoundation.Tournaments;
+using Web3Fps.GameFoundation.Server;
 
 namespace Web3Fps.GameFoundation.Formal
 {
@@ -16,6 +19,10 @@ namespace Web3Fps.GameFoundation.Formal
         [SerializeField] private UIDocument document;
         [SerializeField] private string playSceneName = FormalContentCatalog.RiftRelaySceneName;
         [SerializeField] private PanelSettings fallbackPanelSettings;
+        [SerializeField] private FormalMatchConfirmView confirmView;
+        [SerializeField] private FormalAssetDetailView detailView;
+        [SerializeField] private FormalSkinApplicator[] previewApplicators = new FormalSkinApplicator[0];
+        [SerializeField] private bool enableRemoteSkinBundles;
 
         private VisualElement _root;
         private Label _status;
@@ -29,12 +36,18 @@ namespace Web3Fps.GameFoundation.Formal
         private Button _refreshButton;
         private Button _walletButton;
         private PanelSettings _runtimePanelSettings;
+        private FormalSkinResolver _skinResolver;
+        private CancellationTokenSource _lifetime;
+        private string _previewTokenId;
 
         public void Configure(
             Web3LobbyController lobbyController,
             UIDocument uiDocument,
             string gameplaySceneName,
-            PanelSettings fallbackSettings = null)
+            PanelSettings fallbackSettings = null,
+            FormalMatchConfirmView matchConfirmView = null,
+            FormalAssetDetailView assetDetailView = null,
+            FormalSkinApplicator[] skinPreviewApplicators = null)
         {
             controller = lobbyController;
             document = uiDocument;
@@ -42,11 +55,21 @@ namespace Web3Fps.GameFoundation.Formal
                 ? FormalContentCatalog.RiftRelaySceneName
                 : gameplaySceneName;
             fallbackPanelSettings = fallbackSettings;
+            confirmView = matchConfirmView;
+            detailView = assetDetailView;
+            previewApplicators = skinPreviewApplicators ?? new FormalSkinApplicator[0];
+        }
+
+        private void Awake()
+        {
+            _lifetime = new CancellationTokenSource();
         }
 
         private void OnEnable()
         {
             if (document == null) document = GetComponent<UIDocument>();
+            if (confirmView == null) confirmView = GetComponent<FormalMatchConfirmView>();
+            if (detailView == null) detailView = GetComponent<FormalAssetDetailView>();
             EnsurePanelSettings();
             _root = document == null ? null : document.rootVisualElement;
             if (_root == null) return;
@@ -68,6 +91,8 @@ namespace Web3Fps.GameFoundation.Formal
         private void OnDestroy()
         {
             if (_runtimePanelSettings != null) Destroy(_runtimePanelSettings);
+            _lifetime?.Cancel();
+            _lifetime?.Dispose();
         }
 
         private void EnsurePanelSettings()
@@ -136,6 +161,13 @@ namespace Web3Fps.GameFoundation.Formal
 
         private void Play()
         {
+            // The matchmaking-confirm page owns the entitlement freeze; direct scene
+            // load stays only as a fallback when the page is absent.
+            if (confirmView != null)
+            {
+                confirmView.Show();
+                return;
+            }
             if (Application.CanStreamedLevelBeLoaded(playSceneName))
                 SceneManager.LoadScene(playSceneName);
             else
@@ -167,9 +199,7 @@ namespace Web3Fps.GameFoundation.Formal
             SetText(_wallet, session.Assets.HasWallet
                 ? "BOUND // " + Shorten(session.Assets.wallet)
                 : "GUEST // OPTIONAL WALLET");
-            SetText(_proofFeed, session.LastErrorCode.Length == 0
-                ? "MATCH RESULTS REMAIN PLAYABLE WHILE PUBLIC VERIFICATION RUNS ASYNCHRONOUSLY."
-                : "ARCHIVE DEGRADED // NORMAL PLAY AVAILABLE");
+            SetText(_proofFeed, DescribeProofFeed(session, LocalMatchHandoff.LastReport));
             if (_playButton != null) _playButton.SetEnabled(!session.IsBusy);
             if (_refreshButton != null) _refreshButton.SetEnabled(!session.IsBusy);
             if (_walletButton != null)
@@ -180,6 +210,16 @@ namespace Web3Fps.GameFoundation.Formal
             RenderAssets(session);
             RenderRewards(session);
             RenderTournaments(session);
+            RefreshSkinPreview(session);
+        }
+
+        public static string DescribeProofFeed(Web3LobbySession session, LocalMatchPublishReport report)
+        {
+            if (session != null && session.LastErrorCode.Length > 0)
+                return "ARCHIVE DEGRADED // NORMAL PLAY AVAILABLE";
+            if (report != null)
+                return "LAST MATCH " + FormalPostMatchView.DescribePublish(report);
+            return "MATCH RESULTS REMAIN PLAYABLE WHILE PUBLIC VERIFICATION RUNS ASYNCHRONOUSLY.";
         }
 
         private void RenderAssets(Web3LobbySession session)
@@ -197,13 +237,19 @@ namespace Web3Fps.GameFoundation.Formal
                     "SERIAL #" + item.serial + " / " + item.maxSupply + "   SEASON " + item.seasonId +
                     "   WEAR " + Mathf.RoundToInt(item.wear * 100f) + "%",
                     item.IsConfirmed ? "VERIFIED" : item.state.ToUpperInvariant());
+                var actions = new VisualElement();
+                actions.style.flexDirection = FlexDirection.Row;
                 var equip = new Button(() =>
                 {
                     if (item.IsConfirmed) _ = controller.EquipAsync((int)FormalCosmeticSlot.WeaponFinish, item.tokenId);
                 }) { text = item.IsConfirmed ? "EQUIP FINISH" : "PENDING" };
                 equip.AddToClassList("card-action");
                 equip.SetEnabled(item.IsConfirmed && !session.IsBusy);
-                card.Add(equip);
+                actions.Add(equip);
+                var details = new Button(() => { if (detailView != null) detailView.Show(item); }) { text = "DETAILS" };
+                details.AddToClassList("card-action");
+                actions.Add(details);
+                card.Add(actions);
                 _assetList.Add(card);
             }
         }
@@ -244,19 +290,71 @@ namespace Web3Fps.GameFoundation.Formal
             {
                 if (tournament == null) continue;
                 var tournamentId = tournament.tournamentId;
+                var pool = tournament.prizePool == null || string.IsNullOrEmpty(tournament.prizePool.formatted)
+                    ? "—"
+                    : tournament.prizePool.formatted + " " + tournament.prizePool.symbol;
                 var card = CreateCard(
                     tournament.title.ToUpperInvariant(),
-                    tournament.participantCount + "/" + tournament.maxParticipants + " OPERATORS   POOL " + tournament.prizePoolWei + " WEI",
-                    tournament.state.ToUpperInvariant());
+                    tournament.participantCount + "/" + tournament.maxParticipants + " OPERATORS   POOL " + pool,
+                    (tournament.status ?? "unknown").ToUpperInvariant());
                 var register = new Button(() => _ = controller.RegisterTournamentAsync(tournamentId))
                 {
-                    text = tournament.registered ? "REGISTERED" : "REGISTER"
+                    text = tournament.isRegistered ? "REGISTERED" : "REGISTER"
                 };
                 register.AddToClassList("card-action");
-                register.SetEnabled(!session.IsBusy && !tournament.registered && tournament.ParsedState == TournamentState.Open);
+                register.SetEnabled(!session.IsBusy && !tournament.isRegistered && tournament.IsOpen);
                 card.Add(register);
                 _tournamentList.Add(card);
             }
+        }
+
+        // Lobby preview only: recolors the displayed weapons through the skin catalog,
+        // attempting the hash-verified bundle path first when it is enabled.
+        private void RefreshSkinPreview(Web3LobbySession session)
+        {
+            if (previewApplicators == null || previewApplicators.Length == 0) return;
+            var tokenId = session.GetEquippedTokenId((int)FormalCosmeticSlot.WeaponFinish) ?? string.Empty;
+            if (string.Equals(_previewTokenId, tokenId, StringComparison.Ordinal)) return;
+            _previewTokenId = tokenId;
+            SkinItem item = null;
+            var items = session.Assets.items;
+            if (items != null && !string.IsNullOrEmpty(tokenId))
+            {
+                foreach (var candidate in items)
+                {
+                    if (candidate != null && string.Equals(candidate.tokenId, tokenId, StringComparison.Ordinal))
+                    {
+                        item = candidate;
+                        break;
+                    }
+                }
+            }
+            _ = ApplyPreviewAsync(item);
+        }
+
+        private async Task ApplyPreviewAsync(SkinItem item)
+        {
+            if (_skinResolver == null)
+                _skinResolver = new FormalSkinResolver(new VerifiedSkinBundleLoader(), enableRemoteSkinBundles);
+            FormalSkinResolution resolution;
+            try
+            {
+                resolution = await _skinResolver.ResolveAsync(item, _lifetime.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            // Default and integrity-degraded slots restore the authored materials.
+            var useDefaultLook = item == null || resolution.Source == FormalSkinSource.DefaultFallback;
+            for (var i = 0; i < previewApplicators.Length; i++)
+            {
+                if (previewApplicators[i] == null) continue;
+                if (useDefaultLook) previewApplicators[i].ClearOverrides();
+                else previewApplicators[i].Apply(resolution.Spec);
+            }
+            if (resolution.WarningCode.Length > 0)
+                Debug.LogWarning("Skin preview degraded (" + resolution.WarningCode + "); default look applied.", this);
         }
 
         private static VisualElement CreateCard(string title, string detail, string state)

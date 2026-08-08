@@ -20,6 +20,7 @@ namespace Web3Fps.GameFoundation.Prototype
         private LocalDeathmatchRules _rules;
         private MatchCoordinator _coordinator;
         private long _startedAt;
+        private Func<string> _matchIdProvider;
 
         public bool IsRunning => _rules != null && _rules.Phase == LocalPrototypePhase.Running;
         public bool IsFinished => _rules != null && _rules.Phase == LocalPrototypePhase.Finished;
@@ -75,6 +76,9 @@ namespace Web3Fps.GameFoundation.Prototype
             StateChanged?.Invoke();
         }
 
+        /// <summary>Lets a server-role driver dictate authoritative match ids.</summary>
+        public void SetMatchIdProvider(Func<string> provider) => _matchIdProvider = provider;
+
         public void RestartMatch()
         {
             StopAllCoroutines();
@@ -89,8 +93,10 @@ namespace Web3Fps.GameFoundation.Prototype
             _coordinator.RegisterPlayer(player.ParticipantId, player.TeamId);
             _coordinator.RegisterPlayer(bot.ParticipantId, bot.TeamId);
             _startedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var matchId = _matchIdProvider?.Invoke();
+            if (string.IsNullOrWhiteSpace(matchId)) matchId = "local-" + Guid.NewGuid().ToString("N");
             _coordinator.Start(
-                "local-" + Guid.NewGuid().ToString("N"),
+                matchId,
                 modeId,
                 mapId,
                 Application.version,

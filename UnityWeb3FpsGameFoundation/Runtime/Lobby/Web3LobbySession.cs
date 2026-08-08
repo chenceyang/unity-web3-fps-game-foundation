@@ -1,10 +1,8 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Game.Web3;
 using Web3Fps.GameFoundation.Composition;
-using Web3Fps.GameFoundation.Tournaments;
 
 namespace Web3Fps.GameFoundation.Lobby
 {
@@ -97,67 +95,57 @@ namespace Web3Fps.GameFoundation.Lobby
             return RunAsync(LobbyOperation.ClaimingReward, "Claiming reward…", async token =>
             {
                 var status = await _context.Rewards.ClaimAsync(rewardId, _pollInterval, _operationTimeout, token);
-                if (!string.Equals(status.state, "claimed", StringComparison.Ordinal))
-                    throw new GameAssetException(status.error ?? "Reward was not claimed", 0, status.state);
+                if (!status.CanEquip)
+                    throw new GameAssetException(status.error ?? "Reward was not confirmed", 0, status.state);
                 await RefreshCoreAsync(token);
-                SetStatus("Reward claimed. Token ID: " + status.tokenId);
+                SetStatus("Reward confirmed on-chain. Token ID: " + status.tokenId);
             }, ct);
         }
 
         public Task<bool> RegisterTournamentAsync(string tournamentId, CancellationToken ct = default)
         {
-            return CompleteTournamentActionAsync(
-                LobbyOperation.RegisteringTournament,
-                "Registering for tournament…",
-                (gateway, token) => gateway.BeginRegisterAsync(tournamentId, token),
-                ct);
+            return LaunchTournamentActionAsync(
+                LobbyOperation.RegisteringTournament, "Preparing registration…",
+                tournamentId, TournamentAction.Register, ct);
         }
 
-        public Task<bool> SponsorTournamentAsync(string tournamentId, string amountWei, CancellationToken ct = default)
+        public Task<bool> SponsorTournamentAsync(string tournamentId, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(amountWei) || amountWei.Any(character => character < '0' || character > '9') ||
-                amountWei.All(character => character == '0'))
-                throw new ArgumentException("amountWei must be a positive decimal string", nameof(amountWei));
-            return CompleteTournamentActionAsync(
-                LobbyOperation.SponsoringTournament,
-                "Sponsoring tournament…",
-                (gateway, token) => gateway.BeginSponsorAsync(tournamentId, amountWei, token),
-                ct);
+            return LaunchTournamentActionAsync(
+                LobbyOperation.SponsoringTournament, "Preparing sponsorship…",
+                tournamentId, TournamentAction.Sponsor, ct);
         }
 
         public Task<bool> ClaimPrizeAsync(string tournamentId, CancellationToken ct = default)
         {
-            return CompleteTournamentActionAsync(
-                LobbyOperation.ClaimingPrize,
-                "Claiming tournament prize…",
-                (gateway, token) => gateway.BeginClaimPrizeAsync(tournamentId, token),
-                ct);
+            return LaunchTournamentActionAsync(
+                LobbyOperation.ClaimingPrize, "Preparing prize claim…",
+                tournamentId, TournamentAction.ClaimPrize, ct);
         }
 
         public Task<bool> ClaimRefundAsync(string tournamentId, CancellationToken ct = default)
         {
-            return CompleteTournamentActionAsync(
-                LobbyOperation.ClaimingRefund,
-                "Claiming tournament refund…",
-                (gateway, token) => gateway.BeginClaimRefundAsync(tournamentId, token),
-                ct);
+            return LaunchTournamentActionAsync(
+                LobbyOperation.ClaimingRefund, "Preparing refund claim…",
+                tournamentId, TournamentAction.ClaimRefund, ct);
         }
 
-        private Task<bool> CompleteTournamentActionAsync(
+        // Tournament money movement is signed in the browser, not in Unity; the game
+        // only opens the intent URL. Final state arrives via the backend on refresh,
+        // so there is no transaction polling loop here anymore.
+        private Task<bool> LaunchTournamentActionAsync(
             LobbyOperation operation,
             string pendingMessage,
-            Func<ITournamentGateway, CancellationToken, Task<TransactionIntent>> createIntent,
+            string tournamentId,
+            string action,
             CancellationToken ct)
         {
             return RunAsync(operation, pendingMessage, async token =>
             {
-                var intent = await createIntent(_context.TournamentGateway, token);
-                var status = await _context.TournamentTransactions.CompleteAsync(
-                    intent, _pollInterval, _operationTimeout, token);
-                if (!string.Equals(status.state, "confirmed", StringComparison.Ordinal))
-                    throw new TournamentGatewayException(status.error ?? "Transaction was not confirmed", 0, status.state);
+                await _context.TournamentTransactions.LaunchAsync(tournamentId, action, token);
                 await RefreshTournamentsCoreAsync(token);
-                SetStatus("Transaction confirmed: " + Shorten(status.txHash));
+                SetStatus("Continue the " + action + " transaction in your browser. " +
+                          "Tournament state updates after it lands on-chain.");
             }, ct);
         }
 
@@ -169,7 +157,7 @@ namespace Web3Fps.GameFoundation.Lobby
             {
                 await RefreshTournamentsCoreAsync(ct);
             }
-            catch (TournamentGatewayException exception)
+            catch (GameAssetException exception)
             {
                 LastErrorCode = exception.Code ?? "tournament_unavailable";
                 SetStatus(assetResult.UsedFallback
@@ -186,8 +174,8 @@ namespace Web3Fps.GameFoundation.Lobby
 
         private async Task RefreshTournamentsCoreAsync(CancellationToken ct)
         {
-            var list = await _context.TournamentGateway.GetTournamentsAsync(ct);
-            Tournaments = list?.items ?? Array.Empty<TournamentSummary>();
+            Tournaments = await _context.TournamentGateway.ListTournamentsAsync(null, ct)
+                          ?? Array.Empty<TournamentSummary>();
         }
 
         private async Task<bool> RunAsync(
@@ -214,12 +202,6 @@ namespace Web3Fps.GameFoundation.Lobby
             catch (GameAssetException exception)
             {
                 LastErrorCode = exception.Code ?? "asset_error";
-                SetStatus(exception.Message + " Normal play remains available.");
-                return false;
-            }
-            catch (TournamentGatewayException exception)
-            {
-                LastErrorCode = exception.Code ?? "tournament_error";
                 SetStatus(exception.Message + " Normal play remains available.");
                 return false;
             }

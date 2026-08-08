@@ -36,6 +36,8 @@ namespace Web3Fps.GameFoundation.Server
                     requestedTokenId = requested,
                     resolvedTokenId = confirmed ? requested : string.Empty,
                     skinDefId = confirmed ? skinDefId : 0,
+                    // Same placeholder hash derivation as MockGameAssetGateway.
+                    contentHash = "0x" + (confirmed ? skinDefId : 0).ToString("x").PadLeft(64, '0'),
                     resolution = confirmed ? "confirmed" : "default",
                     reason = confirmed || string.IsNullOrWhiteSpace(requested) ? string.Empty : "not_entitled"
                 };

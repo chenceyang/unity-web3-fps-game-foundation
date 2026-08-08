@@ -37,13 +37,19 @@ namespace Web3Fps.GameFoundation.Gameplay
             var desiredDirection = transform.right * move.x + transform.forward * move.y;
             var speed = _input.SprintHeld ? sprintSpeed : walkSpeed;
             var desiredVelocity = desiredDirection * speed;
-            var accel = _controller.isGrounded ? acceleration : airAcceleration;
+            var wasGrounded = _controller.isGrounded;
+            var accel = wasGrounded ? acceleration : airAcceleration;
             _horizontalVelocity = Vector3.MoveTowards(_horizontalVelocity, desiredVelocity, accel * deltaTime);
 
-            if (_controller.isGrounded)
+            var jumped = false;
+            if (wasGrounded)
             {
                 if (_verticalVelocity < 0f) _verticalVelocity = -2f;
-                if (_input.JumpPressed) _verticalVelocity = Mathf.Sqrt(2f * gravity * jumpHeight);
+                if (_input.JumpPressed)
+                {
+                    _verticalVelocity = Mathf.Sqrt(2f * gravity * jumpHeight);
+                    jumped = true;
+                }
             }
             else
             {
@@ -51,6 +57,17 @@ namespace Web3Fps.GameFoundation.Gameplay
             }
 
             _controller.Move(Velocity * deltaTime);
+
+            // Running down a ramp lifts the capsule off the surface for a frame at a
+            // time, which reads as rhythmic bouncing. Pull the controller back onto
+            // the walkable surface it just left instead of letting gravity slowly
+            // re-accumulate; a real ledge only ever costs one clamped snap step.
+            if (wasGrounded && !jumped && !_controller.isGrounded && _verticalVelocity <= 0f)
+            {
+                var snap = PlayerMotorMath.GroundSnapDistance(
+                    _horizontalVelocity.magnitude, _controller.slopeLimit, deltaTime, _controller.stepOffset);
+                if (snap > 0f) _controller.Move(Vector3.down * snap);
+            }
             _input.JumpPressed = false;
         }
 
@@ -58,6 +75,23 @@ namespace Web3Fps.GameFoundation.Gameplay
         {
             // Network adapters may disable this component and call Simulate from their own tick.
             Simulate(Time.deltaTime);
+        }
+    }
+
+    public static class PlayerMotorMath
+    {
+        /// <summary>
+        /// Downward probe distance used to keep a grounded controller attached to a
+        /// descending slope: the vertical drop of one frame of horizontal travel at
+        /// the steepest walkable angle, clamped so walking off a ledge never snaps
+        /// further than the controller's step offset.
+        /// </summary>
+        public static float GroundSnapDistance(float horizontalSpeed, float slopeLimitDegrees, float deltaTime, float maximumDistance)
+        {
+            if (deltaTime <= 0f || maximumDistance <= 0f) return 0f;
+            var slope = Mathf.Clamp(slopeLimitDegrees, 0f, 80f);
+            var drop = Mathf.Max(0f, horizontalSpeed) * Mathf.Tan(slope * Mathf.Deg2Rad) * deltaTime + 0.02f;
+            return Mathf.Min(drop, maximumDistance);
         }
     }
 }

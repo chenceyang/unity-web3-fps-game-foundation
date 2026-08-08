@@ -1,9 +1,7 @@
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Game.Web3;
-using UnityEngine;
 using UnityEngine.Networking;
 using Web3Fps.GameFoundation.Networking;
 
@@ -27,18 +25,13 @@ namespace Web3Fps.GameFoundation.Match
         public async Task PublishAsync(MatchAttestationPayload payload, CancellationToken ct = default)
         {
             if (payload == null) throw new ArgumentNullException(nameof(payload));
-            var body = JsonUtility.ToJson(new PublishRequest
-            {
-                matchId = payload.Result.matchId,
-                matchIdKey = payload.MatchIdKey,
-                resultHash = payload.ResultHash,
-                canonicalJson = Encoding.UTF8.GetString(payload.CanonicalUtf8)
-            });
-
+            // backend/src/routes/matches.ts expects the raw MatchResult JSON body — it
+            // canonicalizes the received bytes and derives resultHash/matchIdKey itself —
+            // so the canonical UTF-8 bytes are posted directly, never a wrapper envelope.
             using (var request = new UnityWebRequest(_baseUrl + "/internal/v1/matches", UnityWebRequest.kHttpVerbPOST))
             {
                 request.downloadHandler = new DownloadHandlerBuffer();
-                request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+                request.uploadHandler = new UploadHandlerRaw(payload.CanonicalUtf8);
                 request.timeout = _timeoutSeconds;
                 request.SetRequestHeader("Content-Type", "application/json");
                 request.SetRequestHeader("Accept", "application/json");
@@ -46,17 +39,13 @@ namespace Web3Fps.GameFoundation.Match
                 if (!string.IsNullOrWhiteSpace(token)) request.SetRequestHeader("Authorization", "Bearer " + token);
                 await request.SendWebRequest().AwaitAsync(ct);
                 if (request.result != UnityWebRequest.Result.Success)
+                {
+                    if ((int)request.responseCode == 409)
+                        throw new MatchResultConflictException(
+                            "Backend already holds a different result for match " + payload.Result.matchId);
                     throw new InvalidOperationException("Match publish failed with HTTP " + request.responseCode);
+                }
             }
-        }
-
-        [Serializable]
-        private sealed class PublishRequest
-        {
-            public string matchId;
-            public string matchIdKey;
-            public string resultHash;
-            public string canonicalJson;
         }
     }
 }

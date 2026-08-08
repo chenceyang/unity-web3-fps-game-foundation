@@ -4,6 +4,10 @@ using Web3Fps.GameFoundation.Gameplay.Combat;
 
 namespace Web3Fps.GameFoundation.Prototype
 {
+    // Runs before PlayerMotor/HitscanWeapon (default order 0) so the frame's input
+    // and look rotation are applied before movement and aim sample them; otherwise
+    // Unity's undefined script order can add a full frame of input latency.
+    [DefaultExecutionOrder(-50)]
     [DisallowMultipleComponent]
     public sealed class PrototypeInputDriver : MonoBehaviour
     {
@@ -76,8 +80,8 @@ namespace Web3Fps.GameFoundation.Prototype
                 AimHeld = Input.GetButton("Fire2"),
                 Sequence = ++_sequence
             };
+            if (look != null) look.ApplyLook(frame.Look);
             if (motor != null) motor.SetInput(frame);
-            if (look != null) look.SetLookDelta(frame.Look);
             if (weapon != null) weapon.SetHandlingState(motor == null ? frame.Move.magnitude : motor.MovementAmount, frame.AimHeld);
             if (frame.FireHeld && weapon != null && aimSource != null) weapon.TryFire(aimSource.forward);
         }

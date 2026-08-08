@@ -33,6 +33,18 @@ namespace Web3Fps.GameFoundation.Tests
                 async () => await coordinator.PublishOnceAsync(Payload("match-1", 20)));
         }
 
+        [Test]
+        public void BackendConflictFailsFastWithoutASecondRequest()
+        {
+            var publisher = new RecordingPublisher { ConflictsRemaining = 1 };
+            var coordinator = new MatchPublishCoordinator(publisher);
+            var payload = Payload("match-1", 10);
+
+            Assert.ThrowsAsync<MatchResultConflictException>(async () => await coordinator.PublishOnceAsync(payload));
+            Assert.ThrowsAsync<MatchResultConflictException>(async () => await coordinator.PublishOnceAsync(payload));
+            Assert.That(publisher.CallCount, Is.EqualTo(1));
+        }
+
         private static MatchAttestationPayload Payload(string matchId, long endedAt)
         {
             return MatchResultHasher.CreatePayload(new MatchResult
@@ -56,11 +68,17 @@ namespace Web3Fps.GameFoundation.Tests
         private sealed class RecordingPublisher : IMatchResultPublisher
         {
             public int FailuresRemaining { get; set; }
+            public int ConflictsRemaining { get; set; }
             public int CallCount { get; private set; }
 
             public Task PublishAsync(MatchAttestationPayload payload, CancellationToken ct = default)
             {
                 CallCount++;
+                if (ConflictsRemaining > 0)
+                {
+                    ConflictsRemaining--;
+                    throw new MatchResultConflictException("injected conflict");
+                }
                 if (FailuresRemaining > 0)
                 {
                     FailuresRemaining--;

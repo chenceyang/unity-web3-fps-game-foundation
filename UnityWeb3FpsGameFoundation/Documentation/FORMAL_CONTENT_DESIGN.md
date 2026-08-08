@@ -2,20 +2,23 @@
 
 状态：首发方向已进入 Gate B 垂直切片制作；可用于概念验证、外包 Brief、UI 原型、地图 Greybox 和武器内容排期。
 
-适用底层：`com.web3fps.game-foundation` 1.7.0。本文只定义游戏表现和内容，不改变现有安全边界：
+适用底层：`com.web3fps.game-foundation` 1.9.0。本文只定义游戏表现和内容，不改变现有安全边界：
 战斗由权威服务器判定；Web3 仅管理所有权、来源、展示、奖励、赛事资金和结果存证；NFT 永不改变战斗数值。
 
 ![ASH//LEDGER 首个垂直切片概念板](Visuals/ash-ledger-concept-board-v1.png)
 
 > 概念板用于统一布局、材质、色彩、地图模块与武器轮廓，不是最终可直接切图的 UI 或生产资产。
 
-## 当前实现映射（v1.7.0）
+## 当前实现映射（v1.9.0）
 
 - `Tools > Web3 FPS > Create ASH LEDGER Vertical Slice` 生成两张可编辑场景。
-- `AshLedgerLobby` 已使用 UI Toolkit 实现 PLAY / ARSENAL / VAULT / TOURNAMENTS / PROFILE 导航，并绑定 Mock Web3 状态。
+- `AshLedgerLobby` 已使用 UI Toolkit 实现 PLAY / ARSENAL / VAULT / TOURNAMENTS / PROFILE 导航，并绑定 Mock Web3 状态；
+  v1.9.0 加入 §4.3 的登录/游客覆盖层、匹配确认页、资产详情页，战斗场景加入独立赛后页（发布与存证状态不遮挡比分）。
+- 开局 entitlement 冻结、战斗零网关调用与赛后结果发布已由本地驱动接通（Mock 默认，live 走 Http 适配器）；
+  装备 confirmed 皮肤会改变大厅陈列与第一人称武器颜色，数值不变。
 - `RiftRelay` 已实现三路战斗灰盒、正式战斗 HUD、本地玩家/机器人、7 击杀与 5 分钟结算循环；v1.4.1
   加入断裂轨道环境背景、工业塔群、开放式平台、雾效、极光中继柱和阵营导视照明。
-- KESTREL-7、PULSE-9、RELAY-3 已有第一版可编辑轮廓 Prefab；其余三把武器尚未制作。
+- 六把武器均有可编辑轮廓 Prefab 与 `WeaponDefinition` 数值定义；战斗内仍固定 KESTREL-7，切枪未实现。
 - 两套 CC0 骨骼士兵 FBX 已接入大厅、敌方角色和 Cobalt 第一人称骨骼手臂；生成器创建独立动画资产、Animator 状态机及运行时尺寸保险。
 - 本地战斗已接通 30/120 弹药、装填、双层后坐力、原创合成音效、视觉弹道、分区命中、出生保护、动态散布与伤害确认。
 - Coral Bot 已具备视线、反应、记忆、距离控制、侧移和难度参数；RIFT RELAY 已重排开场视线、掩体与中央静态目标。
@@ -210,7 +213,7 @@ NFT 资源不得携带或覆盖伤害、射速、散布、后坐力、射程、�
 | ANCHOR 锚式 | 轻机枪 | 占点持续火力、移动受限 | 15–38m | 外露散热片、重量感动作 |
 | RELAY-3 中继 | 半自动手枪 | 所有配置的可靠副武器 | 4–20m | 极简框架、单手检视动作 |
 
-首个可玩迭代只实现 KESTREL-7、PULSE-9、RELAY-3；其余在地图节奏验证后进入生产。
+v1.9.0 起六把武器均有灰盒 Prefab 与 `WeaponDefinition` 数值；战斗内武器切换仍待实现，实战验证仍以 KESTREL-7 为主。
 
 ### 6.1 外观包允许改变
 

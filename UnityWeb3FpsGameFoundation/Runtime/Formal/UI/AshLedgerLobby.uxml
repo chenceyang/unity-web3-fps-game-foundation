@@ -36,10 +36,13 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="panel-arsenal" class="page">
                     <ui:Label text="ARSENAL // CORE LOADOUT" class="page-title" />
-                    <ui:Label text="KESTREL-7  /  PULSE-9  /  RELAY-3" class="page-kicker" />
+                    <ui:Label text="SIX SERVER-DEFINED WEAPON ROLES // NUMBERS NEVER COME FROM NFTS" class="page-kicker" />
                     <ui:VisualElement class="weapon-strip">
                         <ui:VisualElement class="weapon-card"><ui:Label text="KESTREL-7" class="weapon-name" /><ui:Label text="RIFLE // 12–32M" class="card-detail" /></ui:VisualElement>
                         <ui:VisualElement class="weapon-card"><ui:Label text="PULSE-9" class="weapon-name" /><ui:Label text="SMG // 5–18M" class="card-detail" /></ui:VisualElement>
+                        <ui:VisualElement class="weapon-card"><ui:Label text="WITNESS" class="weapon-name" /><ui:Label text="MARKSMAN // 22–50M" class="card-detail" /></ui:VisualElement>
+                        <ui:VisualElement class="weapon-card"><ui:Label text="BREACH-12" class="weapon-name" /><ui:Label text="SHOTGUN // 2–10M" class="card-detail" /></ui:VisualElement>
+                        <ui:VisualElement class="weapon-card"><ui:Label text="ANCHOR" class="weapon-name" /><ui:Label text="LMG // 15–38M" class="card-detail" /></ui:VisualElement>
                         <ui:VisualElement class="weapon-card"><ui:Label text="RELAY-3" class="weapon-name" /><ui:Label text="PISTOL // 4–20M" class="card-detail" /></ui:VisualElement>
                     </ui:VisualElement>
                     <ui:Label text="NFT FINISHES PRESERVE DAMAGE, RECOIL, HITBOX, TIMING AND SILHOUETTE." class="safety-note" />
@@ -75,6 +78,50 @@
                 <ui:VisualElement class="right-card">
                     <ui:Label text="ARCHIVE FEED" class="card-title" />
                     <ui:Label text="Service degradation never disables ordinary matchmaking." class="body-copy" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="detail-overlay" class="overlay hidden-overlay">
+            <ui:VisualElement class="overlay-card overlay-wide">
+                <ui:Label name="detail-title-label" text="RELIC DETAIL" class="overlay-title" />
+                <ui:Label name="detail-provenance-label" text="SERIAL — // SEASON — // RARITY — // WEAR —" class="overlay-line" />
+                <ui:Label name="detail-token-label" text="TOKEN —" class="overlay-line overlay-mono" />
+                <ui:Label name="detail-hash-label" text="CONTENT HASH —" class="overlay-line overlay-mono" />
+                <ui:Label name="detail-state-label" text="STATE —" class="overlay-line" />
+                <ui:Label name="detail-status-label" text="MARKET OPENS IN THE SYSTEM BROWSER ONLY." class="overlay-status" />
+                <ui:VisualElement class="overlay-actions">
+                    <ui:Button name="detail-equip-button" text="EQUIP FINISH" class="deploy-button overlay-button" />
+                    <ui:Button name="detail-default-button" text="USE DEFAULT" class="quiet-button overlay-button" />
+                    <ui:Button name="detail-market-button" text="OPEN MARKET" class="quiet-button overlay-button" />
+                    <ui:Button name="detail-close-button" text="BACK TO VAULT" class="quiet-button overlay-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="confirm-overlay" class="overlay hidden-overlay">
+            <ui:VisualElement class="overlay-card overlay-wide">
+                <ui:Label text="MATCHMAKING // CONFIRM DEPLOYMENT" class="overlay-title" />
+                <ui:Label name="confirm-mode-label" text="MODE —" class="overlay-line" />
+                <ui:Label name="confirm-map-label" text="MAP —" class="overlay-line" />
+                <ui:Label text="FROZEN LOADOUT" class="section-title section-gap" />
+                <ui:VisualElement name="confirm-slot-list" class="data-list" />
+                <ui:Label name="confirm-warning-label" text="" class="overlay-warning" />
+                <ui:Label name="confirm-status-label" text="OWNERSHIP IS VERIFIED SERVER-SIDE BEFORE COMBAT BEGINS." class="overlay-status" />
+                <ui:VisualElement class="overlay-actions">
+                    <ui:Button name="confirm-accept-button" text="CONFIRM // DEPLOY" class="deploy-button overlay-button" />
+                    <ui:Button name="confirm-cancel-button" text="CANCEL" class="quiet-button overlay-button" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="login-overlay" class="overlay">
+            <ui:VisualElement class="overlay-card">
+                <ui:Label text="ASH//LEDGER" class="brand" />
+                <ui:Label text="OPERATOR ACCESS // DEMO SESSION" class="page-kicker" />
+                <ui:Label text="The demo backend issues a session for any callsign — no password, tokens stay in memory only. Guests always keep full default gear." class="body-copy overlay-copy" />
+                <ui:TextField name="login-player-input" label="CALLSIGN" value="operator-01" class="overlay-field" />
+                <ui:Label name="login-status-label" text="GUEST ENTRY NEVER REQUIRES A WALLET." class="overlay-status" />
+                <ui:VisualElement class="overlay-actions">
+                    <ui:Button name="login-button" text="LOGIN" class="deploy-button overlay-button" />
+                    <ui:Button name="guest-button" text="ENTER AS GUEST" class="quiet-button overlay-button" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

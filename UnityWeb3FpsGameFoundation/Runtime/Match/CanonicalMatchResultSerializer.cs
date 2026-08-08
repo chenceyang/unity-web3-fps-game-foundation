@@ -24,7 +24,7 @@ namespace Web3Fps.GameFoundation.Match
             Validate(result);
             var players = result.players.OrderBy(x => x.playerId, StringComparer.Ordinal).ToArray();
             var rewards = result.rewardSlots
-                .OrderBy(x => x.slot, StringComparer.Ordinal)
+                .OrderBy(x => x.slot)
                 .ThenBy(x => x.playerId, StringComparer.Ordinal)
                 .ToArray();
 
@@ -64,6 +64,8 @@ namespace Web3Fps.GameFoundation.Match
             if (result == null) throw new ArgumentNullException(nameof(result));
             Required(result.version, "version");
             Required(result.matchId, "matchId");
+            if (result.matchId.Length > 128)
+                throw new ArgumentException("matchId exceeds the backend limit of 128 characters");
             Required(result.modeId, "modeId");
             Required(result.mapId, "mapId");
             Required(result.serverBuild, "serverBuild");
@@ -90,9 +92,12 @@ namespace Web3Fps.GameFoundation.Match
             foreach (var reward in result.rewardSlots)
             {
                 if (reward == null) throw new ArgumentException("Reward entries cannot be null", nameof(result));
-                Required(reward.slot, "rewardSlots.slot");
+                if (reward.slot < 0 || reward.slot > 255)
+                    throw new ArgumentException("rewardSlots.slot must fit uint8 (0..255)");
                 Required(reward.playerId, "rewardSlots.playerId");
                 Required(reward.rewardId, "rewardSlots.rewardId");
+                if (reward.rewardId.Length > 128)
+                    throw new ArgumentException("rewardSlots.rewardId exceeds the backend limit of 128 characters");
                 if (!ids.Contains(reward.playerId))
                     throw new ArgumentException("Reward references unknown player " + reward.playerId);
             }
@@ -118,7 +123,7 @@ namespace Web3Fps.GameFoundation.Match
             b.Append('{');
             Property(b, "playerId", r.playerId); b.Append(',');
             Property(b, "rewardId", r.rewardId); b.Append(',');
-            Property(b, "slot", r.slot);
+            Property(b, "slot", (long)r.slot);
             b.Append('}');
         }
 

@@ -20,6 +20,7 @@ namespace Web3Fps.GameFoundation.Formal
         [SerializeField, Min(1f)] private float maximumCenterOffset = 3f;
 
         private PoseNode[] _restPose;
+        private Renderer[] _renderers;
         private bool _animationDisabled;
         private bool _fallbackActivated;
         private PrototypeParticipant _participant;
@@ -33,6 +34,7 @@ namespace Web3Fps.GameFoundation.Formal
             rigRoot = skeletalRig;
             fallbackRoot = proceduralFallback;
             animator = targetAnimator;
+            _renderers = null;
         }
 
         private void Awake()
@@ -73,11 +75,33 @@ namespace Web3Fps.GameFoundation.Formal
 
         private bool IsRigSane()
         {
-            var renderers = rigRoot.GetComponentsInChildren<Renderer>(false);
-            if (renderers.Length == 0) return false;
-            var bounds = renderers[0].bounds;
-            for (var i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-            return FormalRigBoundsMath.IsSane(
+            // This runs every frame per character; the renderer set is cached because
+            // GetComponentsInChildren allocates a fresh array each call and that steady
+            // garbage shows up as periodic GC hitches during combat.
+            if (_renderers == null || _renderers.Length == 0)
+                _renderers = rigRoot.GetComponentsInChildren<Renderer>(false);
+            if (_renderers.Length == 0) return false;
+            var hasBounds = false;
+            var bounds = new Bounds();
+            for (var i = 0; i < _renderers.Length; i++)
+            {
+                var renderer = _renderers[i];
+                if (renderer == null)
+                {
+                    _renderers = null;
+                    return true;
+                }
+                if (!hasBounds)
+                {
+                    bounds = renderer.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(renderer.bounds);
+                }
+            }
+            return hasBounds && FormalRigBoundsMath.IsSane(
                 bounds.size,
                 bounds.center - transform.position,
                 maximumExtent,
@@ -121,6 +145,7 @@ namespace Web3Fps.GameFoundation.Formal
             if (animator != null) animator.enabled = true;
             _animationDisabled = false;
             _fallbackActivated = false;
+            _renderers = null;
         }
 
         private struct PoseNode

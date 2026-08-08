@@ -33,6 +33,34 @@ namespace Web3Fps.GameFoundation.Tests
             Assert.Throws<System.ArgumentException>(() => CanonicalMatchResultSerializer.Serialize(result));
         }
 
+        [Test]
+        public void RewardSlotSerializesAsAnIntegerAndSortsNumerically()
+        {
+            var result = MakeResult(new[] { Player("p1", 1) });
+            result.rewardSlots = new[]
+            {
+                new MatchRewardSlot { slot = 10, playerId = "p1", rewardId = "rw_b" },
+                new MatchRewardSlot { slot = 2, playerId = "p1", rewardId = "rw_a" }
+            };
+
+            var json = CanonicalMatchResultSerializer.Serialize(result);
+
+            // Backend zod schema (matches.ts) declares slot as uint8 — a bare number.
+            Assert.That(json, Does.Contain("\"slot\":2"));
+            Assert.That(json, Does.Contain("\"slot\":10"));
+            Assert.That(json, Does.Not.Contain("\"slot\":\""));
+            Assert.That(json.IndexOf("\"slot\":2", System.StringComparison.Ordinal),
+                Is.LessThan(json.IndexOf("\"slot\":10", System.StringComparison.Ordinal)));
+        }
+
+        [Test]
+        public void RewardSlotOutsideUint8IsRejected()
+        {
+            var result = MakeResult(new[] { Player("p1", 1) });
+            result.rewardSlots = new[] { new MatchRewardSlot { slot = 256, playerId = "p1", rewardId = "rw" } };
+            Assert.Throws<System.ArgumentException>(() => CanonicalMatchResultSerializer.Serialize(result));
+        }
+
         private static MatchResult MakeResult(MatchPlayerResult[] players)
         {
             return new MatchResult
