@@ -1084,9 +1084,15 @@ namespace Web3Fps.GameFoundation.Editor
             var shader = ResolveLitShader();
             var material = new Material(shader) { color = color };
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-            if (texture == null) throw new InvalidOperationException("Missing formal material texture: " + texturePath);
-            if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
-            if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+            if (texture == null)
+            {
+                Debug.LogWarning("Formal material texture is unavailable; using the authored color fallback: " + texturePath);
+            }
+            else
+            {
+                if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
+                if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+            }
             if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smoothness);
             AssetDatabase.CreateAsset(material, Materials + "/" + name + ".mat");
             return material;
@@ -1095,11 +1101,18 @@ namespace Web3Fps.GameFoundation.Editor
         private static Material CreateBackdropMaterial()
         {
             var shader = ResolveUnlitShader();
-            var material = new Material(shader) { color = Color.white };
+            var material = new Material(shader) { color = new Color(0.035f, 0.055f, 0.075f) };
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropTexture);
-            if (texture == null) throw new InvalidOperationException("Missing formal backdrop texture: " + BackdropTexture);
-            if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
-            if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+            if (texture == null)
+            {
+                Debug.LogWarning("Formal backdrop texture is unavailable; using the dark-color fallback: " + BackdropTexture);
+            }
+            else
+            {
+                material.color = Color.white;
+                if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
+                if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+            }
             if (material.HasProperty("_Cull")) material.SetInt("_Cull", (int)CullMode.Off);
             material.doubleSidedGI = true;
             AssetDatabase.CreateAsset(material, Materials + "/OrbitalVista.mat");
